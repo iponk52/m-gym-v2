@@ -48,7 +48,7 @@ export default function Sidebar() {
 
   const handleLogout = async () => {
     try {
-      await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/auth/logout`);
+      await axios.post(`${window.location.protocol}//${window.location.hostname}/api/auth/logout`);
     } catch(e) {}
     localStorage.clear();
     navigate('/login');

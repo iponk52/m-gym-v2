@@ -15,7 +15,7 @@ export default function Packages() {
 
   const fetchPackages = async () => {
     try {
-      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/packages`);
+      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}/api/packages`);
       setPackages(res.data);
     } catch (error) {
       console.error(error);
@@ -33,9 +33,9 @@ export default function Packages() {
       };
 
       if (editingId) {
-        await axios.put(`${window.location.protocol}//${window.location.hostname}:3000/api/packages/${editingId}`, payload);
+        await axios.put(`${window.location.protocol}//${window.location.hostname}/api/packages/${editingId}`, payload);
       } else {
-        await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/packages`, payload);
+        await axios.post(`${window.location.protocol}//${window.location.hostname}/api/packages`, payload);
       }
       setShowModal(false);
       setFormData({ name: '', description: '', price: '' });
@@ -55,7 +55,7 @@ export default function Packages() {
   const handleDelete = async (id) => {
     if (confirm('Are you sure you want to delete this package?')) {
       try {
-        await axios.delete(`${window.location.protocol}//${window.location.hostname}:3000/api/packages/${id}`);
+        await axios.delete(`${window.location.protocol}//${window.location.hostname}/api/packages/${id}`);
         fetchPackages();
       } catch (error) {
         alert('Failed to delete package');

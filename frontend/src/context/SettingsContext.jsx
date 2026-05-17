@@ -17,7 +17,7 @@ export function SettingsProvider({ children }) {
   // We expose a refetch function in case Settings.jsx updates the data
   const fetchSettings = async () => {
     try {
-      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/settings`);
+      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}/api/settings`);
       if (res.data) {
         setGymSettings(res.data);
       }

@@ -38,7 +38,7 @@ export default function Settings() {
 
   const fetchAdmins = async () => {
     try {
-      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/admins`);
+      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}/api/admins`);
       setAdmins(res.data);
     } catch (e) {
       console.error(e);
@@ -47,7 +47,7 @@ export default function Settings() {
 
   const fetchSettings = async () => {
     try {
-      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/settings`);
+      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}/api/settings`);
       setSettings(res.data);
     } catch (error) {
       console.error(error);
@@ -58,7 +58,7 @@ export default function Settings() {
 
   const fetchPaymentMethods = async () => {
     try {
-      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/payment-methods`);
+      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}/api/payment-methods`);
       setPaymentMethods(res.data);
     } catch (error) {
       console.error("Failed to fetch payment methods");
@@ -70,7 +70,7 @@ export default function Settings() {
     setSaving(true);
     setMessage({ text: '', type: '' });
     try {
-      const res = await axios.put(`${window.location.protocol}//${window.location.hostname}:3000/api/settings`, settings);
+      const res = await axios.put(`${window.location.protocol}//${window.location.hostname}/api/settings`, settings);
       setSettings(res.data.settings);
       setMessage({ text: 'Settings updated successfully!', type: 'success' });
       setTimeout(() => setMessage({ text: '', type: '' }), 3000);
@@ -89,7 +89,7 @@ export default function Settings() {
     formData.append('logo', file);
 
     try {
-      const res = await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/settings/logo`, formData, {
+      const res = await axios.post(`${window.location.protocol}//${window.location.hostname}/api/settings/logo`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setSettings(prev => ({ ...prev, logo_url: res.data.logo_url }));
@@ -104,9 +104,9 @@ export default function Settings() {
     e.preventDefault();
     try {
       if (editingMethod) {
-        await axios.put(`${window.location.protocol}//${window.location.hostname}:3000/api/payment-methods/${editingMethod.ID}`, methodForm);
+        await axios.put(`${window.location.protocol}//${window.location.hostname}/api/payment-methods/${editingMethod.ID}`, methodForm);
       } else {
-        await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/payment-methods`, methodForm);
+        await axios.post(`${window.location.protocol}//${window.location.hostname}/api/payment-methods`, methodForm);
       }
       fetchPaymentMethods();
       setIsModalOpen(false);
@@ -118,7 +118,7 @@ export default function Settings() {
   const handleDeleteMethod = async (id) => {
     if (!window.confirm('Are you sure you want to delete this payment method?')) return;
     try {
-      await axios.delete(`${window.location.protocol}//${window.location.hostname}:3000/api/payment-methods/${id}`);
+      await axios.delete(`${window.location.protocol}//${window.location.hostname}/api/payment-methods/${id}`);
       fetchPaymentMethods();
     } catch (error) {
       alert('Failed to delete payment method');
@@ -129,9 +129,9 @@ export default function Settings() {
     e.preventDefault();
     try {
       if (editingAdmin) {
-        await axios.put(`${window.location.protocol}//${window.location.hostname}:3000/api/admins/${editingAdmin.ID}`, adminForm);
+        await axios.put(`${window.location.protocol}//${window.location.hostname}/api/admins/${editingAdmin.ID}`, adminForm);
       } else {
-        await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/admins`, adminForm);
+        await axios.post(`${window.location.protocol}//${window.location.hostname}/api/admins`, adminForm);
       }
       fetchAdmins();
       setAdminModal(false);
@@ -143,7 +143,7 @@ export default function Settings() {
   const handleDeleteAdmin = async (id) => {
     if (!window.confirm('Are you sure you want to delete this admin account?')) return;
     try {
-      await axios.delete(`${window.location.protocol}//${window.location.hostname}:3000/api/admins/${id}`);
+      await axios.delete(`${window.location.protocol}//${window.location.hostname}/api/admins/${id}`);
       fetchAdmins();
     } catch (error) {
       alert(error.response?.data?.error || 'Failed to delete admin');

@@ -37,8 +37,8 @@ export default function ArticleDetail() {
   const fetchData = async () => {
     try {
       const [artRes, homeRes] = await Promise.all([
-        axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/articles/${id}`),
-        axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/public/home`)
+        axios.get(`${window.location.protocol}//${window.location.hostname}/api/articles/${id}`),
+        axios.get(`${window.location.protocol}//${window.location.hostname}/api/public/home`)
       ]);
       setArticle(artRes.data);
       setSettings(homeRes.data.settings);
