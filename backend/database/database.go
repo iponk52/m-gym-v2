@@ -31,7 +31,7 @@ func Connect() {
 
 	if driver == "postgres" {
 		// Postgres connection
-		dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Jakarta", host, user, pass, name, port)
+		dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Jakarta client_encoding=UTF8", host, user, pass, name, port)
 		DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 		if err != nil {
 			log.Fatal("Failed to connect to PostgreSQL database: \n", err)
