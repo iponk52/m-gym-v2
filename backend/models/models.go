@@ -105,7 +105,7 @@ type GymSetting struct {
 type Article struct {
 	gorm.Model
 	Title    string `gorm:"not null" json:"title"`
-	Content  string `gorm:"type:longtext;not null" json:"content"`
+	Content  string `gorm:"type:text;not null" json:"content"`
 	CoverURL string `json:"cover_url"`
 	Author   string `json:"author"`
 }
