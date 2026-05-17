@@ -31,7 +31,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const res = await axios.post('http://localhost:3000/api/auth/login', {
+      const res = await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/auth/login`, {
         username,
         password,
         role
@@ -77,7 +77,7 @@ export default function Login() {
     setError('');
     
     try {
-      await axios.put(`http://localhost:3000/api/auth/change-password/${tempAuthData.member_id}`, {
+      await axios.put(`${window.location.protocol}//${window.location.hostname}:3000/api/auth/change-password/${tempAuthData.member_id}`, {
         new_password: newPassword
       });
       
@@ -95,7 +95,7 @@ export default function Login() {
     setForgotLoading(true);
 
     try {
-      const res = await axios.post('http://localhost:3000/api/public/forgot-password-check', {
+      const res = await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/public/forgot-password-check`, {
         full_name: forgotName,
         phone: forgotPhone
       });

@@ -20,7 +20,7 @@ export default function Reports() {
     setLoading(true);
     setHasSearched(true);
     try {
-      const res = await axios.get(`http://localhost:3000/api/reports?type=${reportType}&start=${startDate}&end=${endDate}`);
+      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/reports?type=${reportType}&start=${startDate}&end=${endDate}`);
       setData(res.data);
     } catch (err) {
       console.error(err);

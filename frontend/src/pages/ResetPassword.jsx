@@ -37,7 +37,7 @@ export default function ResetPassword() {
     setError('');
     
     try {
-      const res = await axios.post('http://localhost:3000/api/public/reset-password', {
+      const res = await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/public/reset-password`, {
         token,
         new_password: newPassword
       });

@@ -28,7 +28,7 @@ export default function PublicScanner() {
 
       // If not in session, validate against backend
       try {
-        const res = await axios.get(`http://localhost:3000/api/scanner-links/validate/${secret}`);
+        const res = await axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/scanner-links/validate/${secret}`);
         sessionStorage.setItem('scanner_auth', secret);
         setLinkName(res.data.name);
         setIsAuthorized(true);
@@ -54,7 +54,7 @@ export default function PublicScanner() {
     setStatus('');
 
     try {
-      const response = await axios.post('http://localhost:3000/api/attendance/scan', {
+      const response = await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/attendance/scan`, {
         qr_code: qrText
       });
       setStatus('success');

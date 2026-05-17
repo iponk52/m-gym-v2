@@ -15,7 +15,7 @@ export default function Templates() {
 
   const fetchTemplates = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/api/templates');
+      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/templates`);
       setTemplates(res.data);
     } catch (error) {
       console.error(error);
@@ -28,9 +28,9 @@ export default function Templates() {
     e.preventDefault();
     try {
       if (editingId) {
-        await axios.put(`http://localhost:3000/api/templates/${editingId}`, formData);
+        await axios.put(`${window.location.protocol}//${window.location.hostname}:3000/api/templates/${editingId}`, formData);
       } else {
-        await axios.post('http://localhost:3000/api/templates', formData);
+        await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/templates`, formData);
       }
       setShowModal(false);
       setFormData({ title: '', content: '', type: 'umum' });
@@ -50,7 +50,7 @@ export default function Templates() {
   const handleDelete = async (id) => {
     if (confirm('Are you sure you want to delete this template?')) {
       try {
-        await axios.delete(`http://localhost:3000/api/templates/${id}`);
+        await axios.delete(`${window.location.protocol}//${window.location.hostname}:3000/api/templates/${id}`);
         fetchTemplates();
       } catch (error) {
         alert('Failed to delete template');

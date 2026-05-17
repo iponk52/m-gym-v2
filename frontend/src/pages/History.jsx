@@ -12,7 +12,7 @@ export default function History() {
 
   const fetchHistory = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/api/attendance/history');
+      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/attendance/history`);
       setHistory(res.data);
     } catch (error) {
       console.error(error);

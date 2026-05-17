@@ -17,7 +17,7 @@ export default function Articles() {
 
   const fetchArticles = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/api/articles');
+      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/articles`);
       setArticles(res.data);
     } catch (error) {
       console.error('Failed to fetch articles');
@@ -40,7 +40,7 @@ export default function Articles() {
   const handleDelete = async (id) => {
     if (confirm('Are you sure you want to delete this article?')) {
       try {
-        await axios.delete(`http://localhost:3000/api/articles/${id}`);
+        await axios.delete(`${window.location.protocol}//${window.location.hostname}:3000/api/articles/${id}`);
         fetchArticles();
       } catch (error) {
         alert('Failed to delete article');
@@ -52,9 +52,9 @@ export default function Articles() {
     e.preventDefault();
     try {
       if (editingId) {
-        await axios.put(`http://localhost:3000/api/articles/${editingId}`, formData);
+        await axios.put(`${window.location.protocol}//${window.location.hostname}:3000/api/articles/${editingId}`, formData);
       } else {
-        await axios.post('http://localhost:3000/api/articles', formData);
+        await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/articles`, formData);
       }
       setShowModal(false);
       setFormData({ title: '', content: '', author: '', cover_url: '' });
@@ -73,7 +73,7 @@ export default function Articles() {
     fd.append('image', file);
 
     try {
-      const res = await axios.post('http://localhost:3000/api/articles/upload-image', fd, {
+      const res = await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/articles/upload-image`, fd, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setFormData({ ...formData, cover_url: res.data.url });

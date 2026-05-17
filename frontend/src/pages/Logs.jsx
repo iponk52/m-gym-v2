@@ -13,7 +13,7 @@ export default function Logs() {
 
   const fetchLogs = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/api/logs');
+      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/logs`);
       setLogs(res.data);
     } catch (err) {
       console.error(err);

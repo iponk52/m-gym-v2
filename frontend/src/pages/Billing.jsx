@@ -10,8 +10,8 @@ export default function Billing() {
   const fetchBillingData = async () => {
     try {
       setLoading(true);
-      const res = await axios.get('http://localhost:3000/api/billing/status');
-      const historyRes = await axios.get('http://localhost:3000/api/billing/history');
+      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/billing/status`);
+      const historyRes = await axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/billing/history`);
       setBillingData({ ...res.data, history: historyRes.data });
     } catch (error) {
       console.error("Failed to fetch billing data", error);
@@ -27,7 +27,7 @@ export default function Billing() {
   const handleSendBilling = async (id) => {
     try {
       setNotifStatus(prev => ({ ...prev, [id]: 'loading' }));
-      const res = await axios.post(`http://localhost:3000/api/billing/send/${id}`);
+      const res = await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/billing/send/${id}`);
       
       let formattedPhone = res.data.phone.replace(/\D/g, '');
       if (formattedPhone.startsWith('0')) {
@@ -56,7 +56,7 @@ export default function Billing() {
   const handleSendReceipt = async (id) => {
     try {
       setNotifStatus(prev => ({ ...prev, [`receipt_${id}`]: 'loading' }));
-      const res = await axios.post(`http://localhost:3000/api/billing/send-receipt/${id}`);
+      const res = await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/billing/send-receipt/${id}`);
       
       let formattedPhone = res.data.phone.replace(/\D/g, '');
       if (formattedPhone.startsWith('0')) {
@@ -83,7 +83,7 @@ export default function Billing() {
   const handleMarkAsPaid = async (id) => {
     if (confirm('Are you sure you want to mark this as paid and extend the subscription by 1 month?')) {
       try {
-        await axios.post(`http://localhost:3000/api/billing/paid/${id}`);
+        await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/billing/paid/${id}`);
         alert('Subscription extended successfully!');
         fetchBillingData(); // Refresh list
       } catch (error) {
@@ -95,7 +95,7 @@ export default function Billing() {
   const handleUndoPayment = async (id) => {
     if (confirm('Are you sure you want to undo this payment? The member\'s subscription date will be reverted by 1 month.')) {
       try {
-        await axios.post(`http://localhost:3000/api/billing/undo/${id}`);
+        await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/billing/undo/${id}`);
         alert('Payment cancelled successfully!');
         fetchBillingData(); // Refresh list
       } catch (error) {
