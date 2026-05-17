@@ -17,7 +17,16 @@ func LogActivity(c *fiber.Ctx, action, details string) {
 	if role == "" {
 		role = "System"
 	}
-	ip := c.IP()
+	ip := c.Get("CF-Connecting-IP")
+	if ip == "" {
+		ip = c.Get("X-Forwarded-For")
+	}
+	if ip == "" {
+		ip = c.Get("X-Real-IP")
+	}
+	if ip == "" {
+		ip = c.IP()
+	}
 
 	logEntry := models.AuditLog{
 		Actor:     actor,
