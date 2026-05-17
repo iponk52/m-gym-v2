@@ -52,6 +52,9 @@ func UpdateSettings(c *fiber.Ctx) error {
 	if req.HeroSubtitle != "" {
 		setting.HeroSubtitle = req.HeroSubtitle
 	}
+	if req.SiteAddress != "" {
+		setting.SiteAddress = req.SiteAddress
+	}
 
 	database.DB.Save(&setting)
 

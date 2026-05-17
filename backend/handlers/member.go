@@ -433,11 +433,13 @@ func ApproveMember(c *fiber.Ctx) error {
 	if !member.DOB.IsZero() {
 		passwordStr = member.DOB.Format("020106")
 	}
-	frontendURL := os.Getenv("FRONTEND_URL")
-	if frontendURL == "" {
-		frontendURL = "http://localhost:5173"
+	var settings models.GymSetting
+	database.DB.First(&settings)
+	siteAddr := settings.SiteAddress
+	if siteAddr == "" {
+		siteAddr = "http://localhost:5173"
 	}
-	linkLogin := fmt.Sprintf("%s/login", frontendURL)
+	linkLogin := fmt.Sprintf("%s/login", siteAddr)
 
 	msgText = strings.ReplaceAll(msgText, "{{nama}}", member.FullName)
 	msgText = strings.ReplaceAll(msgText, "{{password}}", passwordStr)
@@ -473,11 +475,13 @@ func SendPasswordMessage(c *fiber.Ctx) error {
 	if !member.DOB.IsZero() {
 		passwordStr = member.DOB.Format("020106")
 	}
-	frontendURL := os.Getenv("FRONTEND_URL")
-	if frontendURL == "" {
-		frontendURL = "http://localhost:5173"
+	var settings models.GymSetting
+	database.DB.First(&settings)
+	siteAddr := settings.SiteAddress
+	if siteAddr == "" {
+		siteAddr = "http://localhost:5173"
 	}
-	linkLogin := fmt.Sprintf("%s/login", frontendURL)
+	linkLogin := fmt.Sprintf("%s/login", siteAddr)
 
 	msgText = strings.ReplaceAll(msgText, "{{nama}}", member.FullName)
 	msgText = strings.ReplaceAll(msgText, "{{password}}", passwordStr)

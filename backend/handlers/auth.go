@@ -183,17 +183,17 @@ func GenerateResetPasswordLink(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to generate reset link"})
 	}
 
-	frontendURL := os.Getenv("FRONTEND_URL")
-	if frontendURL == "" {
-		frontendURL = "http://localhost:5173"
+	var settings models.GymSetting
+	database.DB.First(&settings)
+
+	siteAddr := settings.SiteAddress
+	if siteAddr == "" {
+		siteAddr = "http://localhost:5173"
 	}
-	resetLink := fmt.Sprintf("%s/reset-password?token=%s", frontendURL, t)
+	resetLink := fmt.Sprintf("%s/reset-password?token=%s", siteAddr, t)
 	
 	var template models.MessageTemplate
 	database.DB.Where("type = ?", "reset").First(&template)
-
-	var settings models.GymSetting
-	database.DB.First(&settings)
 
 	msgText := fmt.Sprintf("Halo %s, silakan klik link berikut untuk melakukan reset password Anda: %s", member.FullName, resetLink)
 	if template.ID != 0 {

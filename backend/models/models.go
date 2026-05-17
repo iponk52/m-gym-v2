@@ -100,6 +100,7 @@ type GymSetting struct {
 	Phone        string `json:"phone"`
 	HeroTitle    string `json:"hero_title"`
 	HeroSubtitle string `json:"hero_subtitle"`
+	SiteAddress  string `json:"site_address"`
 }
 
 type Article struct {

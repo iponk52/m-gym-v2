@@ -11,7 +11,8 @@ export default function Settings() {
     phone: '',
     logo_url: '',
     hero_title: '',
-    hero_subtitle: ''
+    hero_subtitle: '',
+    site_address: ''
   });
   
   const [paymentMethods, setPaymentMethods] = useState([]);
@@ -296,6 +297,18 @@ export default function Settings() {
                     onChange={e => setSettings({...settings, address: e.target.value})}
                     className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 min-h-[80px]" 
                   />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Site URL (Address Site)</label>
+                  <input 
+                    type="url" 
+                    value={settings.site_address} 
+                    onChange={e => setSettings({...settings, site_address: e.target.value})}
+                    placeholder="https://gym.menet.my.id"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500" 
+                  />
+                  <p className="text-xs text-slate-500 mt-2">Digunakan sebagai awalan link (seperti link login/reset) yang dikirim ke WhatsApp member.</p>
                 </div>
 
                 <div className="md:col-span-2">
