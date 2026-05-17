@@ -47,7 +47,7 @@ systemctl start postgresql
 # Setup PostgreSQL Database
 echo "Setting up PostgreSQL Database '$DB_NAME'..."
 sudo -u postgres psql -c "CREATE USER $PG_USER WITH PASSWORD '$PG_PASS';"
-sudo -u postgres psql -c "CREATE DATABASE \"$DB_NAME\" OWNER $PG_USER;"
+sudo -u postgres psql -c "CREATE DATABASE \"$DB_NAME\" OWNER $PG_USER ENCODING 'UTF8';"
 sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE \"$DB_NAME\" TO $PG_USER;"
 # For PostgreSQL 15+, need to grant schema public privileges
 sudo -u postgres psql -d "$DB_NAME" -c "GRANT ALL ON SCHEMA public TO $PG_USER;"
