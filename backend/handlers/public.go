@@ -162,7 +162,7 @@ func ForgotPasswordCheck(c *fiber.Ctx) error {
 	}
 
 	var member models.Member
-	if err := database.DB.Where("phone = ? AND full_name LIKE ?", req.Phone, "%"+req.FullName+"%").First(&member).Error; err != nil {
+	if err := database.DB.Where("phone = ? AND full_name ILIKE ?", req.Phone, "%"+req.FullName+"%").First(&member).Error; err != nil {
 		return c.Status(404).JSON(fiber.Map{"error": "Member tidak ditemukan. Pastikan nama dan no telp sesuai dengan yang terdaftar."})
 	}
 
