@@ -1,0 +1,10 @@
+# Database backups
+*.sql
+*.bak
+
+# Documentation artifacts (like gemini workspace logs if any)
+.gemini/
+
+# OS generated files
+.DS_Store
+Thumbs.db

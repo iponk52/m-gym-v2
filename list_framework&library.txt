@@ -1,0 +1,27 @@
+# M-GYM v2 - Framework & Library List
+
+
+## Backend (Golang)
+- **GoFiber (v2.52.13)**: Kerangka kerja web (Web Framework) utama yang digunakan untuk membangun REST API yang cepat dan ringan.
+- **GORM (v1.31.1)**: ORM (Object-Relational Mapping) untuk berinteraksi dengan database secara mudah dan aman.
+- **GORM MySQL Driver (v1.6.0)**: Driver koneksi ke database MySQL untuk GORM.
+- **Golang JWT (v5.3.1)**: Digunakan untuk sistem otentikasi berbasis token (JSON Web Token) bagi Admin dan Member.
+- **GoDotEnv (v1.5.1)**: Untuk memuat variabel lingkungan (environment variables) dari file `.env`.
+- **Go QRCode (v0.0.0-2020)**: Digunakan untuk men-generate gambar QR Code statis pada backend (jika diperlukan).
+- **Golang Crypto (v0.50.0)**: Digunakan untuk melakukan hashing (enkripsi searah) pada password menggunakan algoritma bcrypt.
+- **Google UUID (v1.6.0)**: Pustaka untuk menghasilkan pengidentifikasi unik universal (UUID).
+
+## Frontend (React + Vite)
+- **React (v19.2.5)**: Pustaka utama antarmuka pengguna (UI).
+- **Vite (v8.0.10)**: Alat pembuat dan server pengembangan frontend yang sangat cepat.
+- **Tailwind CSS (v4.2.4)**: Kerangka kerja CSS berbasis utilitas untuk mempercepat desain UI. Termasuk plugin `@tailwindcss/vite` untuk kompilasi.
+- **Tailwind Typography (@tailwindcss/typography v0.5.19)**: Plugin resmi Tailwind untuk memberikan styling otomatis pada konten teks (digunakan pada perenderan artikel blog/Quill dengan class `prose`).
+- **React Router DOM (v7.15.0)**: Menangani sistem navigasi dan routing antar halaman di sisi klien (client-side routing).
+- **Axios (v1.16.0)**: Klien HTTP berbasis promise untuk mengambil data dari Backend API.
+- **Lucide React (v1.14.0)**: Pustaka ikon SVG modern dan konsisten yang digunakan di seluruh antarmuka.
+- **Recharts (v3.8.1)**: Pustaka pembuat grafik (chart) berbasis komponen React untuk visualisasi data (seperti grafik pendaftaran member).
+- **React Quill New (v3.8.3)**: Komponen Rich Text Editor modern yang mendukung React 19 untuk penulisan artikel/blog.
+- **React QR Scanner (@yudiel/react-qr-scanner v2.5.1)**: Digunakan pada halaman Scanner Admin untuk memindai QR Code melalui kamera perangkat.
+- **QRCode React (v4.2.0)**: Komponen untuk merender/menggambar bentuk QR Code secara langsung di halaman React (misal: di Kartu Digital Member).
+- **HTML-to-Image (v1.11.13) & HTML2Canvas (v1.4.1)**: Digunakan untuk mengambil tangkapan gambar layar (screenshot) dari komponen Kartu Member Digital agar dapat diunduh oleh user.
+- **ESLint**: Alat linting standar untuk menjaga kualitas dan konsistensi kode JavaScript/React.
