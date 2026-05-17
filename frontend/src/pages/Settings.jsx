@@ -72,7 +72,7 @@ export default function Settings() {
     setMessage({ text: '', type: '' });
     try {
       const res = await axios.put(`${window.location.protocol}//${window.location.hostname}/api/settings`, settings);
-      setSettings(res.data.settings);
+      setSettings(res.data.setting);
       setMessage({ text: 'Settings updated successfully!', type: 'success' });
       setTimeout(() => setMessage({ text: '', type: '' }), 3000);
     } catch (error) {
