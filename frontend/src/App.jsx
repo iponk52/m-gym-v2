@@ -35,6 +35,11 @@ axios.interceptors.request.use((config) => {
 
   config.headers['X-User-Role'] = role || 'guest';
   config.headers['X-Username'] = username;
+
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers['Authorization'] = `Bearer ${token}`;
+  }
   
   return config;
 }, (error) => {
