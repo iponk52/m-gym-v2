@@ -61,3 +61,32 @@ func AdminOnly() fiber.Handler {
 		return c.Next()
 	}
 }
+
+// SelfOrAdmin ensures the user is an admin or the requested :id matches the user's ID
+func SelfOrAdmin() fiber.Handler {
+	return func(c *fiber.Ctx) error {
+		role := c.Locals("user_role")
+		if role == "admin" {
+			return c.Next()
+		}
+
+		userID := c.Locals("user_id")
+		paramID := c.Params("id")
+
+		var userIDStr string
+		switch v := userID.(type) {
+		case float64:
+			userIDStr = fmt.Sprintf("%.0f", v)
+		case string:
+			userIDStr = v
+		default:
+			userIDStr = fmt.Sprintf("%v", v)
+		}
+
+		if userIDStr != paramID {
+			return c.Status(403).JSON(fiber.Map{"error": "Forbidden: IDOR detected, you can only access your own data"})
+		}
+
+		return c.Next()
+	}
+}

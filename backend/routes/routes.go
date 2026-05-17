@@ -63,11 +63,12 @@ func SetupRoutes(app *fiber.App) {
 	// PROTECTED ROUTES (Requires ANY valid Token)
 	// ==========================================
 	protected := api.Group("", middleware.Protected())
+	selfOrAdmin := middleware.SelfOrAdmin()
 
-	protected.Get("/members/:id", handlers.GetMemberProfile)
-	protected.Put("/members/:id", handlers.UpdateMemberProfile)
-	protected.Put("/auth/change-password/:id", handlers.ChangePasswordFirstLogin)
-	protected.Post("/members/:id/photo", handlers.UploadMemberPhoto)
+	protected.Get("/members/:id", selfOrAdmin, handlers.GetMemberProfile)
+	protected.Put("/members/:id", selfOrAdmin, handlers.UpdateMemberProfile)
+	protected.Put("/auth/change-password/:id", selfOrAdmin, handlers.ChangePasswordFirstLogin)
+	protected.Post("/members/:id/photo", selfOrAdmin, handlers.UploadMemberPhoto)
 
 
 	// ==========================================
