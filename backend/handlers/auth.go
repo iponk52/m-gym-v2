@@ -183,7 +183,11 @@ func GenerateResetPasswordLink(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to generate reset link"})
 	}
 
-	resetLink := fmt.Sprintf("http://localhost:5173/reset-password?token=%s", t)
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		frontendURL = "http://localhost:5173"
+	}
+	resetLink := fmt.Sprintf("%s/reset-password?token=%s", frontendURL, t)
 	
 	var template models.MessageTemplate
 	database.DB.Where("type = ?", "reset").First(&template)

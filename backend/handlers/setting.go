@@ -79,7 +79,7 @@ func UploadGymLogo(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to save logo"})
 	}
 
-	logoURL := fmt.Sprintf("http://localhost:3000/uploads/gym_logo_%s", file.Filename)
+	logoURL := fmt.Sprintf("%s/uploads/gym_logo_%s", c.BaseURL(), file.Filename)
 	setting.LogoURL = logoURL
 	database.DB.Save(&setting)
 

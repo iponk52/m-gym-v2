@@ -97,7 +97,7 @@ func UploadArticleImage(c *fiber.Ctx) error {
 		return c.Status(500).JSON(fiber.Map{"error": "Failed to save image"})
 	}
 
-	imageURL := fmt.Sprintf("http://localhost:3000/uploads/articles/%d_%s", time.Now().Unix(), file.Filename)
+	imageURL := fmt.Sprintf("%s/uploads/articles/%d_%s", c.BaseURL(), time.Now().Unix(), file.Filename)
 
 	return c.JSON(fiber.Map{"url": imageURL})
 }

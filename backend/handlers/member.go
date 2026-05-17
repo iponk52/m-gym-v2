@@ -433,7 +433,11 @@ func ApproveMember(c *fiber.Ctx) error {
 	if !member.DOB.IsZero() {
 		passwordStr = member.DOB.Format("020106")
 	}
-	linkLogin := "http://localhost:5173/login"
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		frontendURL = "http://localhost:5173"
+	}
+	linkLogin := fmt.Sprintf("%s/login", frontendURL)
 
 	msgText = strings.ReplaceAll(msgText, "{{nama}}", member.FullName)
 	msgText = strings.ReplaceAll(msgText, "{{password}}", passwordStr)
@@ -469,7 +473,11 @@ func SendPasswordMessage(c *fiber.Ctx) error {
 	if !member.DOB.IsZero() {
 		passwordStr = member.DOB.Format("020106")
 	}
-	linkLogin := "http://localhost:5173/login"
+	frontendURL := os.Getenv("FRONTEND_URL")
+	if frontendURL == "" {
+		frontendURL = "http://localhost:5173"
+	}
+	linkLogin := fmt.Sprintf("%s/login", frontendURL)
 
 	msgText = strings.ReplaceAll(msgText, "{{nama}}", member.FullName)
 	msgText = strings.ReplaceAll(msgText, "{{password}}", passwordStr)
