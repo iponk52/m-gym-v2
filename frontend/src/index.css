@@ -63,3 +63,31 @@ body {
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
+
+/* Fix Quill content overflow */
+.ql-editor {
+  white-space: normal !important;
+}
+
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+.quill-content p,
+.quill-content li,
+.quill-content span,
+.quill-content strong,
+.quill-content em {
+  white-space: normal !important;
+  word-break: break-word !important;
+  overflow-wrap: anywhere !important;
+}
+
+/* Override semua justify dari Quill */
+.quill-content p,
+.quill-content li,
+.quill-content span,
+.quill-content * {
+  text-align: left !important;
+}

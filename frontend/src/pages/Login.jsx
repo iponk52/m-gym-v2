@@ -31,7 +31,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const res = await axios.post(`${window.location.protocol}//${window.location.hostname}/api/auth/login`, {
+      const res = await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/auth/login`, {
         username,
         password,
         role

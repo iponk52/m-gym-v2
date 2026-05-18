@@ -32,7 +32,7 @@ export default function Members() {
 
   const fetchPackages = async () => {
     try {
-      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}/api/packages`);
+      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/packages`);
       setPackages(res.data);
     } catch (error) {
       console.error(error);
@@ -41,7 +41,7 @@ export default function Members() {
 
   const fetchDiscounts = async () => {
     try {
-      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}/api/discounts`);
+      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/discounts`);
       setDiscounts(res.data);
     } catch (error) {
       console.error(error);
@@ -50,7 +50,7 @@ export default function Members() {
 
   const fetchMembers = async () => {
     try {
-      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}/api/members`);
+      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/members`);
       setMembers(res.data);
     } catch (error) {
       console.error(error);
@@ -98,7 +98,7 @@ export default function Members() {
     if (editing) return;
 
     try {
-      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}/api/public/check-duplicate?field=${field}&value=${encodeURIComponent(value)}`);
+      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/public/check-duplicate?field=${field}&value=${encodeURIComponent(value)}`);
       if (res.data.exists) {
         const errorMsgs = {
           phone: 'Nomor telepon sudah terdaftar',
@@ -129,9 +129,9 @@ export default function Members() {
       }
 
       if (editing && selectedMember) {
-        await axios.put(`${window.location.protocol}//${window.location.hostname}/api/members/admin/${selectedMember.ID}`, payload);
+        await axios.put(`${window.location.protocol}//${window.location.hostname}:3000/api/members/admin/${selectedMember.ID}`, payload);
       } else {
-        await axios.post(`${window.location.protocol}//${window.location.hostname}/api/members/register`, payload);
+        await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/members/register`, payload);
       }
       setShowFormModal(false);
       fetchMembers();
@@ -157,7 +157,7 @@ export default function Members() {
 
   const handleManualScan = async (qr_code) => {
     try {
-      const res = await axios.post(`${window.location.protocol}//${window.location.hostname}/api/attendance/scan`, { qr_code });
+      const res = await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/attendance/scan`, { qr_code });
       fetchMembers();
     } catch (error) {
       alert(error.response?.data?.error || 'Failed to scan');
@@ -167,7 +167,7 @@ export default function Members() {
   const handleApprove = async (member) => {
     if (window.confirm(`Apakah member baru ${member.full_name} sudah bayar?`)) {
       try {
-        const res = await axios.put(`${window.location.protocol}//${window.location.hostname}/api/members/approve/${member.ID}`);
+        const res = await axios.put(`${window.location.protocol}//${window.location.hostname}:3000/api/members/approve/${member.ID}`);
         alert('Member berhasil di-ACC dan diaktifkan!');
         fetchMembers();
         
@@ -186,7 +186,7 @@ export default function Members() {
   const handleSendPassword = async (member) => {
     if (window.confirm(`Kirim password via WhatsApp ke ${member.full_name}?`)) {
       try {
-        const res = await axios.post(`${window.location.protocol}//${window.location.hostname}/api/members/send-password/${member.ID}`);
+        const res = await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/members/send-password/${member.ID}`);
         if (res.data.text && res.data.phone) {
           let formattedPhone = res.data.phone.replace(/\D/g, '');
           if (formattedPhone.startsWith('0')) formattedPhone = '62' + formattedPhone.slice(1);
@@ -202,7 +202,7 @@ export default function Members() {
   const handleDelete = async (id) => {
     if (window.confirm('Apakah Anda yakin ingin menghapus permanen member ini?')) {
       try {
-        await axios.delete(`${window.location.protocol}//${window.location.hostname}/api/members/${id}`);
+        await axios.delete(`${window.location.protocol}//${window.location.hostname}:3000/api/members/${id}`);
         fetchMembers();
       } catch (error) {
         alert('Gagal menghapus member');
@@ -213,7 +213,7 @@ export default function Members() {
   const handleDisable = async (id) => {
     if (window.confirm('Apakah Anda yakin ingin menonaktifkan (Disable) member ini? History pembayaran akan tetap tersimpan.')) {
       try {
-        await axios.put(`${window.location.protocol}//${window.location.hostname}/api/members/disable/${id}`);
+        await axios.put(`${window.location.protocol}//${window.location.hostname}:3000/api/members/disable/${id}`);
         alert('Member berhasil di-disable');
         fetchMembers();
       } catch (error) {
@@ -225,7 +225,7 @@ export default function Members() {
   const handleRenew = async (member) => {
     if (window.confirm(`Apakah ${member.full_name} ingin melakukan perpanjangan (Renew) hari ini juga?`)) {
       try {
-        const res = await axios.put(`${window.location.protocol}//${window.location.hostname}/api/members/renew/${member.ID}`);
+        const res = await axios.put(`${window.location.protocol}//${window.location.hostname}:3000/api/members/renew/${member.ID}`);
         alert('Perpanjangan berhasil! Status member kembali Aktif.');
         fetchMembers();
       } catch (error) {
@@ -237,7 +237,7 @@ export default function Members() {
   const handleResetPassword = async (member) => {
     if (window.confirm(`Kirim link Reset Password via WhatsApp ke ${member.full_name}?`)) {
       try {
-        const res = await axios.post(`${window.location.protocol}//${window.location.hostname}/api/members/reset-password-link/${member.ID}`);
+        const res = await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/members/reset-password-link/${member.ID}`);
         if (res.data.text && res.data.phone) {
           let formattedPhone = res.data.phone.replace(/\D/g, '');
           if (formattedPhone.startsWith('0')) formattedPhone = '62' + formattedPhone.slice(1);
