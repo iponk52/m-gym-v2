@@ -61,7 +61,9 @@ export default function ArticleDetail() {
     if (!html) return "";
     return html
       .replace(/\sstyle="[^"]*"/gi, "") // hapus semua inline style
-      .replace(/\sclass="ql-[^"]*"/gi, ""); // hapus class bawaan quill
+      .replace(/\sclass="ql-[^"]*"/gi, "") // hapus class bawaan quill
+      .replace(/&nbsp;/gi, " ") // ganti non-breaking space HTML entity dengan spasi biasa
+      .replace(/\u00A0/g, " "); // ganti karakter non-breaking space (U+00A0) dengan spasi biasa
   };
 
   if (loading)
@@ -154,41 +156,6 @@ export default function ArticleDetail() {
                 </span>
               </div>
             </div>
-
-            {/* Rich Text Content */}
-            <style>{`
-              .article-body {
-                width: 100%;
-                max-width: 100%;
-                overflow-wrap: break-word;
-                word-break: break-word;
-              }
-              .article-body p,
-              .article-body li,
-              .article-body h1,
-              .article-body h2,
-              .article-body h3,
-              .article-body h4,
-              .article-body blockquote,
-              .article-body span,
-              .article-body strong,
-              .article-body em {
-                white-space: normal !important;
-                word-break: break-word !important;
-                overflow-wrap: break-word !important;
-                max-width: 100% !important;
-                text-align: left !important;
-              }
-              .article-body img {
-                max-width: 100% !important;
-                height: auto !important;
-                border-radius: 1rem;
-              }
-              .article-body ul,
-              .article-body ol {
-                padding-left: 1.5rem;
-              }
-            `}</style>
 
             <div
               className="article-body prose prose-slate dark:prose-invert prose-lg max-w-none prose-headings:font-bold prose-a:text-blue-600 hover:prose-a:text-blue-500 prose-img:rounded-2xl prose-img:shadow-md"

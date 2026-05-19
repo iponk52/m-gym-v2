@@ -137,7 +137,17 @@ export default function Articles() {
             <div className="p-6 flex flex-col flex-1">
               <h3 className="font-bold text-lg text-slate-800 mb-2 line-clamp-2">{article.title}</h3>
               <p className="text-sm text-slate-500 mb-4 flex-1 line-clamp-3">
-                {article.content.replace(/<[^>]+>/g, '')}
+                {article.content
+                  .replace(/&nbsp;/gi, ' ')
+                  .replace(/&amp;/gi, '&')
+                  .replace(/&lt;/gi, '<')
+                  .replace(/&gt;/gi, '>')
+                  .replace(/&quot;/gi, '"')
+                  .replace(/&#39;/gi, "'")
+                  .replace(/<[^>]+>/g, '')
+                  .replace(/\u00A0/g, ' ')
+                  .replace(/\s+/g, ' ')
+                  .trim()}
               </p>
               <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
                 <span className="text-xs font-medium text-slate-400">{new Date(article.CreatedAt).toLocaleDateString()}</span>

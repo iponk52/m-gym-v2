@@ -248,7 +248,17 @@ export default function Home() {
                 <div className="p-6 flex flex-col flex-1">
                   <h3 className="font-bold text-xl text-slate-800 dark:text-white mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">{article.title}</h3>
                   <p className="text-slate-500 dark:text-slate-400 text-sm mb-4 line-clamp-3 leading-relaxed">
-                    {article.content.replace(/<[^>]+>/g, '')}
+                    {article.content
+                      .replace(/&nbsp;/gi, ' ')
+                      .replace(/&amp;/gi, '&')
+                      .replace(/&lt;/gi, '<')
+                      .replace(/&gt;/gi, '>')
+                      .replace(/&quot;/gi, '"')
+                      .replace(/&#39;/gi, "'")
+                      .replace(/<[^>]+>/g, '')
+                      .replace(/\u00A0/g, ' ')
+                      .replace(/\s+/g, ' ')
+                      .trim()}
                   </p>
                   <div className="mt-auto flex items-center justify-between text-sm font-medium">
                     <span className="text-slate-400 dark:text-slate-500">Oleh: {article.author || 'Admin'}</span>
