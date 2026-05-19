@@ -114,7 +114,7 @@ export default function Home() {
     const adminPhone = data.settings?.phone || '';
 
     try {
-      await axios.post(`${window.location.protocol}//${window.location.hostname}/api/public/register`, {
+      await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/public/register`, {
         full_name: formData.name,
         phone: formData.phone,
         email: formData.email,
