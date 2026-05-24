@@ -82,7 +82,10 @@ export default function Settings() {
       setMessage({ text: 'Settings updated successfully!', type: 'success' });
       setTimeout(() => setMessage({ text: '', type: '' }), 3000);
     } catch (error) {
-      setMessage({ text: 'Failed to update settings', type: 'error' });
+      setMessage({ 
+        text: error.response?.data?.error || 'Failed to update settings', 
+        type: 'error' 
+      });
     } finally {
       setSaving(false);
     }

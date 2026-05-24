@@ -62,7 +62,10 @@ func UpdateSettings(c *fiber.Ctx) error {
 		setting.SiteAddress = req.SiteAddress
 	}
 
-	database.DB.Save(&setting)
+	if err := database.DB.Save(&setting).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Gagal menyimpan ke database: " + err.Error()})
+	}
+	fmt.Printf("[UpdateSettings] saved settings successfully: %+v\n", setting)
 
 	LogActivity(c, "Update Settings", "Updated gym settings")
 
