@@ -101,6 +101,10 @@ type GymSetting struct {
 	HeroTitle    string `json:"hero_title"`
 	HeroSubtitle string `json:"hero_subtitle"`
 	SiteAddress  string `json:"site_address"`
+	SMTPHost     string `json:"smtp_host"`
+	SMTPPort     int    `json:"smtp_port"`
+	SMTPEmail    string `json:"smtp_email"`
+	SMTPPassword string `json:"smtp_password"`
 }
 
 type Article struct {

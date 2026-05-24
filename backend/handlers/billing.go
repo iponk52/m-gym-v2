@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"mgym-backend/database"
 	"mgym-backend/models"
+	"mgym-backend/utils"
 	"strings"
 	"time"
 
@@ -228,6 +229,63 @@ func MarkAsPaid(c *fiber.Ctx) error {
 	var mem models.Member
 	database.DB.Unscoped().First(&mem, sub.MemberID)
 	LogActivity(c, "Mark as Paid", "Confirmed payment for member: "+mem.FullName)
+
+	// Send receipt via SMTP if configured and member has email
+	var settings models.GymSetting
+	database.DB.First(&settings)
+
+	if settings.SMTPHost != "" && settings.SMTPPassword != "" && settings.SMTPEmail != "" && mem.Email != "" {
+		var template models.MessageTemplate
+		database.DB.Where("type = ?", "lunas").First(&template)
+
+		msgText := "Halo {{nama}}, terima kasih. Pembayaran Anda telah kami terima pada {{tanggal}}."
+		if template.ID != 0 {
+			msgText = template.Content
+		}
+
+		hargaPaket := 0.0
+		discountStr := "0"
+		tagihan := payment.Amount
+
+		if sub.PackageID != nil {
+			hargaPaket = sub.Package.Price
+			
+			if sub.DiscountID != nil && sub.Discount.ID != 0 {
+				if sub.Discount.Type == "percentage" {
+					potongan := hargaPaket * sub.Discount.Value / 100
+					discountStr = formatRupiahBilling(potongan)
+				} else if sub.Discount.Type == "fixed" || sub.Discount.Type == "nominal" {
+					discountStr = formatRupiahBilling(sub.Discount.Value)
+				}
+			}
+		}
+
+		msgText = strings.ReplaceAll(msgText, "{{nama}}", mem.FullName)
+		msgText = strings.ReplaceAll(msgText, "{{nominal}}", formatRupiahBilling(payment.Amount))
+		msgText = strings.ReplaceAll(msgText, "{{tanggal}}", payment.PaymentDate.Format("2006-01-02"))
+		msgText = strings.ReplaceAll(msgText, "{{harga_paket}}", formatRupiahBilling(hargaPaket))
+		msgText = strings.ReplaceAll(msgText, "{{discount}}", discountStr)
+		msgText = strings.ReplaceAll(msgText, "{{tagihan}}", formatRupiahBilling(tagihan))
+		msgText = strings.ReplaceAll(msgText, "{{id_member}}", mem.MemberCode)
+
+		emailBody := fmt.Sprintf(`
+		<html>
+		<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f8fafc; padding: 40px 10px;">
+			<div style="max-width: 600px; margin: 0 auto; padding: 40px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+				<h2 style="color: #10b981; margin-top: 0; font-size: 24px; font-weight: bold; text-align: center;">Konfirmasi Pembayaran Lunas</h2>
+				<div style="font-size: 16px; margin-top: 20px; white-space: pre-wrap; background-color: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #f1f5f9;">%s</div>
+				<hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
+				<p style="font-size: 12px; color: #94a3b8; text-align: center;">Terima kasih atas keanggotaan Anda di <strong>%s</strong>!</p>
+			</div>
+		</body>
+		</html>
+		`, strings.ReplaceAll(msgText, "\n", "<br/>"), settings.Name)
+
+		// Async or quiet send to avoid blocking request
+		go func() {
+			_ = utils.SendEmail(settings.SMTPHost, settings.SMTPPort, settings.SMTPEmail, settings.SMTPPassword, mem.Email, "Konfirmasi Kuitansi Pembayaran - "+settings.Name, emailBody)
+		}()
+	}
 
 	return c.JSON(fiber.Map{
 		"message":      "Subscription extended successfully",

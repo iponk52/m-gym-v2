@@ -21,6 +21,7 @@ export default function Login() {
   const [forgotPhone, setForgotPhone] = useState('');
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotError, setForgotError] = useState('');
+  const [forgotSuccess, setForgotSuccess] = useState(null);
 
   const navigate = useNavigate();
   const { gymSettings } = useSettings();
@@ -106,15 +107,7 @@ export default function Login() {
         phone: forgotPhone
       });
       
-      if (res.data.text && res.data.admin_phone) {
-        let formattedPhone = res.data.admin_phone.replace(/\D/g, '');
-        if (formattedPhone.startsWith('0')) formattedPhone = '62' + formattedPhone.slice(1);
-        const url = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(res.data.text)}`;
-        window.open(url, '_blank');
-        setShowForgotPassword(false);
-        setForgotName('');
-        setForgotPhone('');
-      }
+      setForgotSuccess(res.data);
     } catch (err) {
       setForgotError(err.response?.data?.error || 'Gagal menghubungi server');
     } finally {
@@ -258,46 +251,90 @@ export default function Login() {
       {showForgotPassword && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-3xl w-full max-w-md p-8 shadow-2xl">
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">Lupa Password</h2>
-            <p className="text-slate-500 mb-6 text-sm">Masukkan nama lengkap dan nomor telepon Anda yang terdaftar. Kami akan mengarahkan Anda ke WhatsApp Admin.</p>
-            
-            {forgotError && (
-              <div className="bg-rose-50 text-rose-600 p-3 rounded-xl text-sm font-medium mb-6 border border-rose-100">
-                {forgotError}
+            {forgotSuccess ? (
+              <div className="text-center space-y-5">
+                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
+                  <Activity size={32} />
+                </div>
+                <h2 className="text-2xl font-bold text-slate-800">Email Terkirim!</h2>
+                <div className="text-sm text-slate-600 space-y-3 leading-relaxed text-left bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                  <p>Kami telah mengirimkan link reset password ke email terdaftar Anda: <strong className="text-slate-800">{forgotSuccess.email}</strong>.</p>
+                  <p>⚠️ <strong>PENTING:</strong> Silakan cek folder <strong>Spam</strong> atau <strong>Promosi</strong> jika email tidak ditemukan di kotak masuk utama.</p>
+                  <p>Jika masih belum menerima email reset password, silakan hubungi admin via WhatsApp untuk mendapatkan bantuan.</p>
+                </div>
+                
+                <div className="flex flex-col gap-2 pt-2">
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      let formattedPhone = forgotSuccess.admin_phone.replace(/\D/g, '');
+                      if (formattedPhone.startsWith('0')) formattedPhone = '62' + formattedPhone.slice(1);
+                      const url = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(forgotSuccess.text)}`;
+                      window.open(url, '_blank');
+                    }}
+                    className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all"
+                  >
+                    Chat Admin via WhatsApp
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setShowForgotPassword(false);
+                      setForgotSuccess(null);
+                      setForgotName('');
+                      setForgotPhone('');
+                      setForgotError('');
+                    }}
+                    className="w-full py-3 text-slate-500 hover:bg-slate-100 font-bold rounded-xl transition-all"
+                  >
+                    Tutup
+                  </button>
+                </div>
               </div>
+            ) : (
+              <>
+                <h2 className="text-2xl font-bold text-slate-800 mb-2">Lupa Password</h2>
+                <p className="text-slate-500 mb-6 text-sm">Masukkan nama lengkap dan nomor telepon Anda yang terdaftar. Link reset password akan dikirim ke email terdaftar Anda.</p>
+                
+                {forgotError && (
+                  <div className="bg-rose-50 text-rose-600 p-3 rounded-xl text-sm font-medium mb-6 border border-rose-100">
+                    {forgotError}
+                  </div>
+                )}
+
+                <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Nama Lengkap</label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                      <input required type="text" value={forgotName} onChange={e => setForgotName(e.target.value)} className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-50" placeholder="Sesuai yang terdaftar" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-slate-700 mb-2">Nomor Telepon</label>
+                    <div className="relative">
+                      <input required type="text" value={forgotPhone} onChange={e => {
+                        let val = e.target.value;
+                        if (val.startsWith('0')) {
+                          val = '62' + val.substring(1);
+                        } else if (val.startsWith('+62')) {
+                          val = '62' + val.substring(3);
+                        }
+                        setForgotPhone(val);
+                      }} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-50" placeholder="e.g. 628123456789" />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 mt-6">
+                    <button type="button" onClick={() => { setShowForgotPassword(false); setForgotError(''); setForgotName(''); setForgotPhone(''); }} className="w-1/3 py-3 text-slate-600 hover:bg-slate-100 rounded-xl font-bold transition-colors">Batal</button>
+                    <button type="submit" disabled={forgotLoading} className="w-2/3 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/30 disabled:opacity-50">
+                      {forgotLoading ? 'Mengecek...' : 'Kirim Link ke Email'}
+                    </button>
+                  </div>
+                </form>
+              </>
             )}
-
-            <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Nama Lengkap</label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                  <input required type="text" value={forgotName} onChange={e => setForgotName(e.target.value)} className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-50" placeholder="Sesuai yang terdaftar" />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Nomor Telepon</label>
-                <div className="relative">
-                  <input required type="text" value={forgotPhone} onChange={e => {
-                    let val = e.target.value;
-                    if (val.startsWith('0')) {
-                      val = '62' + val.substring(1);
-                    } else if (val.startsWith('+62')) {
-                      val = '62' + val.substring(3);
-                    }
-                    setForgotPhone(val);
-                  }} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-50" placeholder="e.g. 628123456789" />
-                </div>
-              </div>
-
-              <div className="flex gap-3 mt-6">
-                <button type="button" onClick={() => { setShowForgotPassword(false); setForgotError(''); setForgotName(''); setForgotPhone(''); }} className="w-1/3 py-3 text-slate-600 hover:bg-slate-100 rounded-xl font-bold transition-colors">Batal</button>
-                <button type="submit" disabled={forgotLoading} className="w-2/3 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/30 disabled:opacity-50">
-                  {forgotLoading ? 'Mengecek...' : 'Kirim Pesan ke Admin'}
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}

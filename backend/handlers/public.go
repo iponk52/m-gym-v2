@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"mgym-backend/database"
 	"mgym-backend/models"
+	"mgym-backend/utils"
 	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -150,6 +152,19 @@ type ForgotPasswordCheckReq struct {
 	Phone    string `json:"phone"`
 }
 
+func censorEmail(email string) string {
+	parts := strings.Split(email, "@")
+	if len(parts) != 2 {
+		return email
+	}
+	username := parts[0]
+	domain := parts[1]
+	if len(username) <= 2 {
+		return username + "***@" + domain
+	}
+	return string(username[0]) + "***" + string(username[len(username)-1]) + "@" + domain
+}
+
 func ForgotPasswordCheck(c *fiber.Ctx) error {
 	var req ForgotPasswordCheckReq
 	if err := c.BodyParser(&req); err != nil {
@@ -166,13 +181,69 @@ func ForgotPasswordCheck(c *fiber.Ctx) error {
 		return c.Status(404).JSON(fiber.Map{"error": "Member tidak ditemukan. Pastikan nama dan no telp sesuai dengan yang terdaftar."})
 	}
 
+	if member.Email == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Email Anda belum terdaftar di sistem. Silakan hubungi admin via WhatsApp untuk mendaftarkannya."})
+	}
+
 	var settings models.GymSetting
 	database.DB.First(&settings)
 
-	msgText := fmt.Sprintf("hallo %s, user saya %s dengan no telp : %s lupa password", settings.Name, member.FullName, member.Phone)
+	if settings.SMTPHost == "" || settings.SMTPPassword == "" || settings.SMTPEmail == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Layanan email (SMTP) belum dikonfigurasi oleh Admin. Silakan hubungi Admin via WhatsApp."})
+	}
+
+	// Generate JWT reset password token (valid for 1 hour)
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+		"id":      member.ID,
+		"purpose": "reset_password",
+		"exp":     time.Now().Add(time.Hour * 1).Unix(),
+	})
+
+	t, err := token.SignedString(jwtSecret)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Gagal membuat link reset password"})
+	}
+
+	siteAddr := settings.SiteAddress
+	if siteAddr == "" {
+		siteAddr = "http://localhost:5173"
+	}
+	resetLink := fmt.Sprintf("%s/reset-password?token=%s", siteAddr, t)
+
+	emailSubject := fmt.Sprintf("Reset Password Akun - %s", settings.Name)
+	emailBody := fmt.Sprintf(`
+	<html>
+	<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f8fafc; padding: 40px 10px;">
+		<div style="max-width: 600px; margin: 0 auto; padding: 40px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+			<h2 style="color: #2563eb; margin-top: 0; font-size: 24px; font-weight: bold; text-align: center;">Permintaan Reset Password</h2>
+			<p style="font-size: 16px; margin-top: 20px;">Halo <strong>%s</strong>,</p>
+			<p style="font-size: 16px;">Kami menerima permintaan untuk mereset password akun Anda di <strong>%s</strong>.</p>
+			<p style="font-size: 16px;">Silakan klik tombol biru di bawah ini untuk mereset password Anda. Link ini hanya berlaku selama <strong>1 jam</strong>:</p>
+			<p style="text-align: center; margin: 30px 0;">
+				<a href="%s" style="background-color: #2563eb; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);">Reset Password Baru</a>
+			</p>
+			<p style="font-size: 14px; color: #64748b;">Jika tombol di atas tidak berfungsi, Anda juga dapat menyalin dan membuka link berikut di browser Anda:</p>
+			<p style="word-break: break-all; color: #2563eb; font-size: 14px; background-color: #f1f5f9; padding: 12px; border-radius: 8px;">%s</p>
+			<hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
+			<p style="font-size: 12px; color: #94a3b8; text-align: center;">Jika Anda tidak melakukan permintaan ini, silakan abaikan email ini secara aman.</p>
+		</div>
+	</body>
+	</html>
+	`, member.FullName, settings.Name, resetLink, resetLink)
+
+	// Send SMTP Email
+	err = utils.SendEmail(settings.SMTPHost, settings.SMTPPort, settings.SMTPEmail, settings.SMTPPassword, member.Email, emailSubject, emailBody)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Gagal mengirim email reset password. Hubungi admin."})
+	}
+
+	msgText := fmt.Sprintf("Halo %s, saya sudah kirim request reset password namun belum menerima email reset untuk member %s", settings.Name, member.FullName)
 
 	return c.JSON(fiber.Map{
+		"status":      "success",
+		"message":     "Email reset password berhasil dikirim",
+		"email":       censorEmail(member.Email),
 		"admin_phone": settings.Phone,
-		"text": msgText,
+		"text":        msgText,
 	})
 }

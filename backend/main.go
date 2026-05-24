@@ -6,6 +6,7 @@ import (
 	"mgym-backend/database"
 	"mgym-backend/models"
 	"mgym-backend/routes"
+	"mgym-backend/scheduler"
 	"os"
 
 	"github.com/gofiber/fiber/v2"
@@ -21,6 +22,9 @@ func main() {
 	}
 
 	database.Connect()
+
+	// Start background automated billing email scheduler
+	scheduler.StartBillingScheduler()
 
 	// Auto-create default admin
 	var count int64

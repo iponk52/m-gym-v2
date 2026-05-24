@@ -45,6 +45,10 @@ func UpdateSettings(c *fiber.Ctx) error {
 	setting.About = req.About
 	setting.Email = req.Email
 	setting.Phone = req.Phone
+	setting.SMTPHost = req.SMTPHost
+	setting.SMTPPort = req.SMTPPort
+	setting.SMTPEmail = req.SMTPEmail
+	setting.SMTPPassword = req.SMTPPassword
 
 	if req.HeroTitle != "" {
 		setting.HeroTitle = req.HeroTitle

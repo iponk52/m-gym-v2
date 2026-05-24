@@ -12,7 +12,11 @@ export default function Settings() {
     logo_url: '',
     hero_title: '',
     hero_subtitle: '',
-    site_address: ''
+    site_address: '',
+    smtp_host: '',
+    smtp_port: 587,
+    smtp_email: '',
+    smtp_password: ''
   });
   
   const [paymentMethods, setPaymentMethods] = useState([]);
@@ -318,6 +322,54 @@ export default function Settings() {
                     onChange={e => setSettings({...settings, about: e.target.value})}
                     className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 min-h-[100px]" 
                     placeholder="Short description about the gym facilities and vision."
+                  />
+                </div>
+
+                <div className="md:col-span-2 pt-4 border-t border-slate-100">
+                  <h3 className="text-md font-bold text-slate-800 mb-4">SMTP Email Configuration</h3>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">SMTP Host</label>
+                  <input 
+                    type="text" 
+                    value={settings.smtp_host || ''} 
+                    onChange={e => setSettings({...settings, smtp_host: e.target.value})}
+                    placeholder="e.g. smtp.gmail.com"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500" 
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">SMTP Port</label>
+                  <input 
+                    type="number" 
+                    value={settings.smtp_port || ''} 
+                    onChange={e => setSettings({...settings, smtp_port: parseInt(e.target.value) || 0})}
+                    placeholder="e.g. 587 or 465"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500" 
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">SMTP Email User</label>
+                  <input 
+                    type="email" 
+                    value={settings.smtp_email || ''} 
+                    onChange={e => setSettings({...settings, smtp_email: e.target.value})}
+                    placeholder="your-email@gmail.com"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500" 
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">SMTP Password / App Password</label>
+                  <input 
+                    type="password" 
+                    value={settings.smtp_password || ''} 
+                    onChange={e => setSettings({...settings, smtp_password: e.target.value})}
+                    placeholder="••••••••••••"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500" 
                   />
                 </div>
 
