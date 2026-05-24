@@ -70,12 +70,51 @@ func SendEmail(host string, port int, from, password, to, subject, body string) 
 
 		return client.Quit()
 	} else {
-		// Port 587 or others: use standard smtp.SendMail
-		auth := smtp.PlainAuth("", from, password, host)
-		err := smtp.SendMail(addr, auth, from, []string{to}, []byte(message))
+		// Port 587 or others: use STARTTLS with custom dialer to bypass cert verification
+		c, err := smtp.Dial(addr)
 		if err != nil {
-			return fmt.Errorf("smtp sendmail failed: %w", err)
+			return fmt.Errorf("smtp dial failed: %w", err)
 		}
-		return nil
+		defer c.Close()
+
+		if ok, _ := c.Extension("STARTTLS"); ok {
+			config := &tls.Config{
+				InsecureSkipVerify: true,
+				ServerName:         host,
+			}
+			if err = c.StartTLS(config); err != nil {
+				return fmt.Errorf("starttls failed: %w", err)
+			}
+		}
+
+		auth := smtp.PlainAuth("", from, password, host)
+		if err = c.Auth(auth); err != nil {
+			return fmt.Errorf("smtp auth failed: %w", err)
+		}
+
+		if err = c.Mail(from); err != nil {
+			return fmt.Errorf("smtp mail command failed: %w", err)
+		}
+
+		if err = c.Rcpt(to); err != nil {
+			return fmt.Errorf("smtp rcpt command failed: %w", err)
+		}
+
+		w, err := c.Data()
+		if err != nil {
+			return fmt.Errorf("smtp data command failed: %w", err)
+		}
+
+		_, err = w.Write([]byte(message))
+		if err != nil {
+			return fmt.Errorf("smtp write failed: %w", err)
+		}
+
+		err = w.Close()
+		if err != nil {
+			return fmt.Errorf("smtp close failed: %w", err)
+		}
+
+		return c.Quit()
 	}
 }
