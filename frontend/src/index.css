@@ -63,3 +63,14 @@ body {
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
+
+/* Quill text alignment overrides for Tailwind/prose components */
+.ql-align-center {
+  text-align: center !important;
+}
+.ql-align-justify {
+  text-align: justify !important;
+}
+.ql-align-right {
+  text-align: right !important;
+}
