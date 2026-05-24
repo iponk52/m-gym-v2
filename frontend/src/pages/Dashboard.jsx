@@ -17,7 +17,7 @@ export default function Dashboard() {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/dashboard?filter=${filter}`);
+      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}/api/dashboard?filter=${filter}`);
       setStats(res.data);
     } catch (error) {
       console.error("Failed to fetch dashboard stats", error);
