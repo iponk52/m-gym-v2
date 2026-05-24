@@ -6,6 +6,7 @@ import (
 	"strings"
 	"mgym-backend/database"
 	"mgym-backend/models"
+	"mgym-backend/utils"
 	"os"
 	"time"
 
@@ -448,6 +449,35 @@ func ApproveMember(c *fiber.Ctx) error {
 
 	LogActivity(c, "Approve Member", "Approved member registration: "+member.FullName)
 
+	// Send SMTP Approval Email if configured and member has email
+	if settings.SMTPHost != "" && settings.SMTPPassword != "" && settings.SMTPEmail != "" && member.Email != "" {
+		emailSubject := "Pendaftaran Akun Disetujui - " + settings.Name
+		if template.ID != 0 && template.Title != "" {
+			emailSubject = template.Title
+			emailSubject = strings.ReplaceAll(emailSubject, "{{nama}}", member.FullName)
+			emailSubject = strings.ReplaceAll(emailSubject, "{{nama_gym}}", settings.Name)
+			emailSubject = strings.ReplaceAll(emailSubject, "{{id_member}}", member.MemberCode)
+		}
+
+		emailBody := fmt.Sprintf(`
+		<html>
+		<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f8fafc; padding: 40px 10px;">
+			<div style="max-width: 600px; margin: 0 auto; padding: 40px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+				<h2 style="color: #2563eb; margin-top: 0; font-size: 24px; font-weight: bold; text-align: center;">Akun Anda Telah Aktif!</h2>
+				<div style="font-size: 16px; margin-top: 20px; white-space: pre-wrap; background-color: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #f1f5f9;">%s</div>
+				<hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
+				<p style="font-size: 12px; color: #94a3b8; text-align: center;">Selamat datang di <strong>%s</strong>.</p>
+			</div>
+		</body>
+		</html>
+		`, strings.ReplaceAll(msgText, "\n", "<br/>"), settings.Name)
+
+		// Async send so it doesn't block the HTTP request
+		go func(toEmail, subject, body string) {
+			_ = utils.SendEmail(settings.SMTPHost, settings.SMTPPort, settings.SMTPEmail, settings.SMTPPassword, toEmail, subject, body)
+		}(member.Email, emailSubject, emailBody)
+	}
+
 	return c.JSON(fiber.Map{
 		"message": "Member approved successfully", 
 		"member": member,
@@ -489,6 +519,35 @@ func SendPasswordMessage(c *fiber.Ctx) error {
 	msgText = strings.ReplaceAll(msgText, "{{id_member}}", member.MemberCode)
 
 	LogActivity(c, "Generate Password Message", "Generated WA password template for member: "+member.FullName)
+
+	// Send SMTP Password Email if configured and member has email
+	if settings.SMTPHost != "" && settings.SMTPPassword != "" && settings.SMTPEmail != "" && member.Email != "" {
+		emailSubject := "Informasi Akun Member - " + settings.Name
+		if template.ID != 0 && template.Title != "" {
+			emailSubject = template.Title
+			emailSubject = strings.ReplaceAll(emailSubject, "{{nama}}", member.FullName)
+			emailSubject = strings.ReplaceAll(emailSubject, "{{nama_gym}}", settings.Name)
+			emailSubject = strings.ReplaceAll(emailSubject, "{{id_member}}", member.MemberCode)
+		}
+
+		emailBody := fmt.Sprintf(`
+		<html>
+		<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f8fafc; padding: 40px 10px;">
+			<div style="max-width: 600px; margin: 0 auto; padding: 40px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+				<h2 style="color: #2563eb; margin-top: 0; font-size: 24px; font-weight: bold; text-align: center;">Informasi Akses Akun</h2>
+				<div style="font-size: 16px; margin-top: 20px; white-space: pre-wrap; background-color: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #f1f5f9;">%s</div>
+				<hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
+				<p style="font-size: 12px; color: #94a3b8; text-align: center;">Pesan ini dikirim secara otomatis oleh <strong>%s</strong>.</p>
+			</div>
+		</body>
+		</html>
+		`, strings.ReplaceAll(msgText, "\n", "<br/>"), settings.Name)
+
+		// Async send so it doesn't block the HTTP request
+		go func(toEmail, subject, body string) {
+			_ = utils.SendEmail(settings.SMTPHost, settings.SMTPPort, settings.SMTPEmail, settings.SMTPPassword, toEmail, subject, body)
+		}(member.Email, emailSubject, emailBody)
+	}
 
 	return c.JSON(fiber.Map{
 		"message": "Template generated",

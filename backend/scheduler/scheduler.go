@@ -106,10 +106,22 @@ func runBillingChecks() {
 			msgText = strings.ReplaceAll(msgText, "{{id_member}}", sub.Member.MemberCode)
 
 			emailSubject := ""
-			if daysLeft == 5 {
-				emailSubject = fmt.Sprintf("Pengingat Tagihan: 5 Hari Lagi Jatuh Tempo - %s", settings.Name)
+			if template.ID != 0 && template.Title != "" {
+				emailSubject = template.Title
+				emailSubject = strings.ReplaceAll(emailSubject, "{{nama}}", sub.Member.FullName)
+				emailSubject = strings.ReplaceAll(emailSubject, "{{jatuh_tempo}}", sub.EndDate.Format("2006-01-02"))
+				emailSubject = strings.ReplaceAll(emailSubject, "{{sisa_hari}}", fmt.Sprintf("%d", daysLeft))
+				emailSubject = strings.ReplaceAll(emailSubject, "{{harga_paket}}", formatRupiahBillingScheduler(hargaPaket))
+				emailSubject = strings.ReplaceAll(emailSubject, "{{discount}}", discountStr)
+				emailSubject = strings.ReplaceAll(emailSubject, "{{tagihan}}", formatRupiahBillingScheduler(tagihan))
+				emailSubject = strings.ReplaceAll(emailSubject, "{{tanggal}}", now.Format("2006-01-02"))
+				emailSubject = strings.ReplaceAll(emailSubject, "{{id_member}}", sub.Member.MemberCode)
 			} else {
-				emailSubject = fmt.Sprintf("Pengingat Tagihan: Hari Ini Jatuh Tempo - %s", settings.Name)
+				if daysLeft == 5 {
+					emailSubject = fmt.Sprintf("Pengingat Tagihan: 5 Hari Lagi Jatuh Tempo - %s", settings.Name)
+				} else {
+					emailSubject = fmt.Sprintf("Pengingat Tagihan: Hari Ini Jatuh Tempo - %s", settings.Name)
+				}
 			}
 
 			emailBody := fmt.Sprintf(`

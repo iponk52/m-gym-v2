@@ -175,6 +175,41 @@ func SendManualBilling(c *fiber.Ctx) error {
 
 	LogActivity(c, "Send Billing Reminder", "Sent billing reminder to member: "+sub.Member.FullName)
 
+	// Send SMTP Email if configured and member has email
+	var settings models.GymSetting
+	database.DB.First(&settings)
+	if settings.SMTPHost != "" && settings.SMTPPassword != "" && settings.SMTPEmail != "" && sub.Member.Email != "" {
+		emailSubject := fmt.Sprintf("Tagihan Iuran Langganan - %s", settings.Name)
+		if template.ID != 0 && template.Title != "" {
+			emailSubject = template.Title
+			emailSubject = strings.ReplaceAll(emailSubject, "{{nama}}", sub.Member.FullName)
+			emailSubject = strings.ReplaceAll(emailSubject, "{{jatuh_tempo}}", sub.EndDate.Format("2006-01-02"))
+			emailSubject = strings.ReplaceAll(emailSubject, "{{sisa_hari}}", fmt.Sprintf("%d", daysLeft))
+			emailSubject = strings.ReplaceAll(emailSubject, "{{harga_paket}}", formatRupiahBilling(hargaPaket))
+			emailSubject = strings.ReplaceAll(emailSubject, "{{discount}}", discountStr)
+			emailSubject = strings.ReplaceAll(emailSubject, "{{tagihan}}", formatRupiahBilling(tagihan))
+			emailSubject = strings.ReplaceAll(emailSubject, "{{tanggal}}", time.Now().Format("2006-01-02"))
+			emailSubject = strings.ReplaceAll(emailSubject, "{{id_member}}", sub.Member.MemberCode)
+		}
+
+		emailBody := fmt.Sprintf(`
+		<html>
+		<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f8fafc; padding: 40px 10px;">
+			<div style="max-width: 600px; margin: 0 auto; padding: 40px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+				<h2 style="color: #2563eb; margin-top: 0; font-size: 24px; font-weight: bold; text-align: center;">Tagihan Iuran Langganan</h2>
+				<div style="font-size: 16px; margin-top: 20px; white-space: pre-wrap; background-color: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #f1f5f9;">%s</div>
+				<hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
+				<p style="font-size: 12px; color: #94a3b8; text-align: center;">Pesan ini dikirim secara otomatis oleh <strong>%s</strong>.</p>
+			</div>
+		</body>
+		</html>
+		`, strings.ReplaceAll(msgText, "\n", "<br/>"), settings.Name)
+
+		go func(subj, body string) {
+			_ = utils.SendEmail(settings.SMTPHost, settings.SMTPPort, settings.SMTPEmail, settings.SMTPPassword, sub.Member.Email, subj, body)
+		}(emailSubject, emailBody)
+	}
+
 	return c.JSON(fiber.Map{
 		"message": "Template generated",
 		"phone":   sub.Member.Phone,
@@ -268,6 +303,18 @@ func MarkAsPaid(c *fiber.Ctx) error {
 		msgText = strings.ReplaceAll(msgText, "{{tagihan}}", formatRupiahBilling(tagihan))
 		msgText = strings.ReplaceAll(msgText, "{{id_member}}", mem.MemberCode)
 
+		emailSubject := "Konfirmasi Kuitansi Pembayaran - " + settings.Name
+		if template.ID != 0 && template.Title != "" {
+			emailSubject = template.Title
+			emailSubject = strings.ReplaceAll(emailSubject, "{{nama}}", mem.FullName)
+			emailSubject = strings.ReplaceAll(emailSubject, "{{nominal}}", formatRupiahBilling(payment.Amount))
+			emailSubject = strings.ReplaceAll(emailSubject, "{{tanggal}}", payment.PaymentDate.Format("2006-01-02"))
+			emailSubject = strings.ReplaceAll(emailSubject, "{{harga_paket}}", formatRupiahBilling(hargaPaket))
+			emailSubject = strings.ReplaceAll(emailSubject, "{{discount}}", discountStr)
+			emailSubject = strings.ReplaceAll(emailSubject, "{{tagihan}}", formatRupiahBilling(tagihan))
+			emailSubject = strings.ReplaceAll(emailSubject, "{{id_member}}", mem.MemberCode)
+		}
+
 		emailBody := fmt.Sprintf(`
 		<html>
 		<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f8fafc; padding: 40px 10px;">
@@ -282,9 +329,9 @@ func MarkAsPaid(c *fiber.Ctx) error {
 		`, strings.ReplaceAll(msgText, "\n", "<br/>"), settings.Name)
 
 		// Async or quiet send to avoid blocking request
-		go func() {
-			_ = utils.SendEmail(settings.SMTPHost, settings.SMTPPort, settings.SMTPEmail, settings.SMTPPassword, mem.Email, "Konfirmasi Kuitansi Pembayaran - "+settings.Name, emailBody)
-		}()
+		go func(subj, body string) {
+			_ = utils.SendEmail(settings.SMTPHost, settings.SMTPPort, settings.SMTPEmail, settings.SMTPPassword, mem.Email, subj, body)
+		}(emailSubject, emailBody)
 	}
 
 	return c.JSON(fiber.Map{
@@ -346,6 +393,41 @@ func SendPaidReceipt(c *fiber.Ctx) error {
 	msgText = strings.ReplaceAll(msgText, "{{discount}}", discountStr)
 	msgText = strings.ReplaceAll(msgText, "{{tagihan}}", formatRupiahBilling(tagihan))
 	msgText = strings.ReplaceAll(msgText, "{{id_member}}", payment.Subscription.Member.MemberCode)
+
+	// Send SMTP Email if configured and member has email
+	var settings models.GymSetting
+	database.DB.First(&settings)
+	if settings.SMTPHost != "" && settings.SMTPPassword != "" && settings.SMTPEmail != "" && payment.Subscription.Member.Email != "" {
+		emailSubject := "Konfirmasi Kuitansi Pembayaran - " + settings.Name
+		if template.ID != 0 && template.Title != "" {
+			emailSubject = template.Title
+			emailSubject = strings.ReplaceAll(emailSubject, "{{nama}}", payment.Subscription.Member.FullName)
+			emailSubject = strings.ReplaceAll(emailSubject, "{{nominal}}", formatRupiahBilling(payment.Amount))
+			emailSubject = strings.ReplaceAll(emailSubject, "{{tanggal}}", time.Now().Format("2006-01-02"))
+			emailSubject = strings.ReplaceAll(emailSubject, "{{harga_paket}}", formatRupiahBilling(hargaPaket))
+			emailSubject = strings.ReplaceAll(emailSubject, "{{discount}}", discountStr)
+			emailSubject = strings.ReplaceAll(emailSubject, "{{tagihan}}", formatRupiahBilling(tagihan))
+			emailSubject = strings.ReplaceAll(emailSubject, "{{id_member}}", payment.Subscription.Member.MemberCode)
+		}
+
+		emailBody := fmt.Sprintf(`
+		<html>
+		<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f8fafc; padding: 40px 10px;">
+			<div style="max-width: 600px; margin: 0 auto; padding: 40px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+				<h2 style="color: #10b981; margin-top: 0; font-size: 24px; font-weight: bold; text-align: center;">Konfirmasi Pembayaran Lunas</h2>
+				<div style="font-size: 16px; margin-top: 20px; white-space: pre-wrap; background-color: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #f1f5f9;">%s</div>
+				<hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
+				<p style="font-size: 12px; color: #94a3b8; text-align: center;">Terima kasih atas keanggotaan Anda di <strong>%s</strong>!</p>
+			</div>
+		</body>
+		</html>
+		`, strings.ReplaceAll(msgText, "\n", "<br/>"), settings.Name)
+
+		// Async or quiet send to avoid blocking request
+		go func(subj, body string) {
+			_ = utils.SendEmail(settings.SMTPHost, settings.SMTPPort, settings.SMTPEmail, settings.SMTPPassword, payment.Subscription.Member.Email, subj, body)
+		}(emailSubject, emailBody)
+	}
 
 	return c.JSON(fiber.Map{
 		"message": "Template generated",

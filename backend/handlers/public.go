@@ -210,26 +210,55 @@ func ForgotPasswordCheck(c *fiber.Ctx) error {
 	}
 	resetLink := fmt.Sprintf("%s/reset-password?token=%s", siteAddr, t)
 
+	var template models.MessageTemplate
+	database.DB.Where("type = ?", "reset").First(&template)
+
 	emailSubject := fmt.Sprintf("Reset Password Akun - %s", settings.Name)
-	emailBody := fmt.Sprintf(`
-	<html>
-	<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f8fafc; padding: 40px 10px;">
-		<div style="max-width: 600px; margin: 0 auto; padding: 40px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
-			<h2 style="color: #2563eb; margin-top: 0; font-size: 24px; font-weight: bold; text-align: center;">Permintaan Reset Password</h2>
-			<p style="font-size: 16px; margin-top: 20px;">Halo <strong>%s</strong>,</p>
-			<p style="font-size: 16px;">Kami menerima permintaan untuk mereset password akun Anda di <strong>%s</strong>.</p>
-			<p style="font-size: 16px;">Silakan klik tombol biru di bawah ini untuk mereset password Anda. Link ini hanya berlaku selama <strong>1 jam</strong>:</p>
-			<p style="text-align: center; margin: 30px 0;">
-				<a href="%s" style="background-color: #2563eb; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);">Reset Password Baru</a>
-			</p>
-			<p style="font-size: 14px; color: #64748b;">Jika tombol di atas tidak berfungsi, Anda juga dapat menyalin dan membuka link berikut di browser Anda:</p>
-			<p style="word-break: break-all; color: #2563eb; font-size: 14px; background-color: #f1f5f9; padding: 12px; border-radius: 8px;">%s</p>
-			<hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
-			<p style="font-size: 12px; color: #94a3b8; text-align: center;">Jika Anda tidak melakukan permintaan ini, silakan abaikan email ini secara aman.</p>
-		</div>
-	</body>
-	</html>
-	`, member.FullName, settings.Name, resetLink, resetLink)
+	if template.ID != 0 && template.Title != "" {
+		emailSubject = template.Title
+		emailSubject = strings.ReplaceAll(emailSubject, "{{nama}}", member.FullName)
+		emailSubject = strings.ReplaceAll(emailSubject, "{{nama_gym}}", settings.Name)
+		emailSubject = strings.ReplaceAll(emailSubject, "{{id_member}}", member.MemberCode)
+	}
+
+	var emailBody string
+	if template.ID != 0 && template.Content != "" {
+		msgText := template.Content
+		msgText = strings.ReplaceAll(msgText, "{{nama}}", member.FullName)
+		msgText = strings.ReplaceAll(msgText, "{{link_reset}}", resetLink)
+		msgText = strings.ReplaceAll(msgText, "{{nama_gym}}", settings.Name)
+		msgText = strings.ReplaceAll(msgText, "{{id_member}}", member.MemberCode)
+
+		emailBody = fmt.Sprintf(`
+		<html>
+		<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f8fafc; padding: 40px 10px;">
+			<div style="max-width: 600px; margin: 0 auto; padding: 40px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+				<div style="font-size: 16px; color: #333; white-space: pre-wrap;">%s</div>
+			</div>
+		</body>
+		</html>
+		`, strings.ReplaceAll(msgText, "\n", "<br/>"))
+	} else {
+		emailBody = fmt.Sprintf(`
+		<html>
+		<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f8fafc; padding: 40px 10px;">
+			<div style="max-width: 600px; margin: 0 auto; padding: 40px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+				<h2 style="color: #2563eb; margin-top: 0; font-size: 24px; font-weight: bold; text-align: center;">Permintaan Reset Password</h2>
+				<p style="font-size: 16px; margin-top: 20px;">Halo <strong>%s</strong>,</p>
+				<p style="font-size: 16px;">Kami menerima permintaan untuk mereset password akun Anda di <strong>%s</strong>.</p>
+				<p style="font-size: 16px;">Silakan klik tombol biru di bawah ini untuk mereset password Anda. Link ini hanya berlaku selama <strong>1 jam</strong>:</p>
+				<p style="text-align: center; margin: 30px 0;">
+					<a href="%s" style="background-color: #2563eb; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);">Reset Password Baru</a>
+				</p>
+				<p style="font-size: 14px; color: #64748b;">Jika tombol di atas tidak berfungsi, Anda juga dapat menyalin dan membuka link berikut di browser Anda:</p>
+				<p style="word-break: break-all; color: #2563eb; font-size: 14px; background-color: #f1f5f9; padding: 12px; border-radius: 8px;">%s</p>
+				<hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
+				<p style="font-size: 12px; color: #94a3b8; text-align: center;">Jika Anda tidak melakukan permintaan ini, silakan abaikan email ini secara aman.</p>
+			</div>
+		</body>
+		</html>
+		`, member.FullName, settings.Name, resetLink, resetLink)
+	}
 
 	// Send SMTP Email
 	err = utils.SendEmail(settings.SMTPHost, settings.SMTPPort, settings.SMTPEmail, settings.SMTPPassword, member.Email, emailSubject, emailBody)
