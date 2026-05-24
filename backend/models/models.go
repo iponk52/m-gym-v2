@@ -74,6 +74,7 @@ type MessageTemplate struct {
 	Title   string `gorm:"not null" json:"title"`
 	Content string `gorm:"type:text;not null" json:"content"`
 	Type    string `gorm:"not null;default:'umum'" json:"type"`
+	Channel string `gorm:"not null;default:'wa'" json:"channel"` // 'wa' or 'email'
 }
 
 type Discount struct {

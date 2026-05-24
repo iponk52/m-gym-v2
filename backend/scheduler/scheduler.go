@@ -50,7 +50,9 @@ func runBillingChecks() {
 
 	now := time.Now()
 	var template models.MessageTemplate
-	database.DB.Where("type = ?", "tagihan").First(&template)
+	if err := database.DB.Where("type = ? AND channel = ?", "tagihan", "email").First(&template).Error; err != nil || template.ID == 0 {
+		database.DB.Where("type = ? AND channel = ?", "tagihan", "wa").First(&template)
+	}
 
 	defaultTemplateText := "Halo {{nama}}, masa aktif langganan Anda akan berakhir pada {{jatuh_tempo}}."
 	templateText := defaultTemplateText

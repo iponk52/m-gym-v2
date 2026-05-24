@@ -131,7 +131,7 @@ func SendManualBilling(c *fiber.Ctx) error {
 	}
 
 	var template models.MessageTemplate
-	database.DB.Where("type = ?", "tagihan").First(&template)
+	database.DB.Where("type = ? AND channel = ?", "tagihan", "wa").First(&template)
 
 	msgText := "Halo {{nama}}, masa aktif langganan Anda akan berakhir pada {{jatuh_tempo}}."
 	if template.ID != 0 {
@@ -179,9 +179,14 @@ func SendManualBilling(c *fiber.Ctx) error {
 	var settings models.GymSetting
 	database.DB.First(&settings)
 	if settings.SMTPHost != "" && settings.SMTPPassword != "" && settings.SMTPEmail != "" && sub.Member.Email != "" {
+		var emailTemplate models.MessageTemplate
+		if err := database.DB.Where("type = ? AND channel = ?", "tagihan", "email").First(&emailTemplate).Error; err != nil || emailTemplate.ID == 0 {
+			emailTemplate = template
+		}
+
 		emailSubject := fmt.Sprintf("Tagihan Iuran Langganan - %s", settings.Name)
-		if template.ID != 0 && template.Title != "" {
-			emailSubject = template.Title
+		if emailTemplate.ID != 0 && emailTemplate.Title != "" {
+			emailSubject = emailTemplate.Title
 			emailSubject = strings.ReplaceAll(emailSubject, "{{nama}}", sub.Member.FullName)
 			emailSubject = strings.ReplaceAll(emailSubject, "{{jatuh_tempo}}", sub.EndDate.Format("2006-01-02"))
 			emailSubject = strings.ReplaceAll(emailSubject, "{{sisa_hari}}", fmt.Sprintf("%d", daysLeft))
@@ -192,18 +197,32 @@ func SendManualBilling(c *fiber.Ctx) error {
 			emailSubject = strings.ReplaceAll(emailSubject, "{{id_member}}", sub.Member.MemberCode)
 		}
 
+		emailMsgText := "Halo {{nama}}, masa aktif langganan Anda akan berakhir pada {{jatuh_tempo}}."
+		if emailTemplate.ID != 0 && emailTemplate.Content != "" {
+			emailMsgText = emailTemplate.Content
+		}
+
+		emailMsgText = strings.ReplaceAll(emailMsgText, "{{nama}}", sub.Member.FullName)
+		emailMsgText = strings.ReplaceAll(emailMsgText, "{{jatuh_tempo}}", sub.EndDate.Format("2006-01-02"))
+		emailMsgText = strings.ReplaceAll(emailMsgText, "{{sisa_hari}}", fmt.Sprintf("%d", daysLeft))
+		emailMsgText = strings.ReplaceAll(emailMsgText, "{{harga_paket}}", formatRupiahBilling(hargaPaket))
+		emailMsgText = strings.ReplaceAll(emailMsgText, "{{discount}}", discountStr)
+		emailMsgText = strings.ReplaceAll(emailMsgText, "{{tagihan}}", formatRupiahBilling(tagihan))
+		emailMsgText = strings.ReplaceAll(emailMsgText, "{{tanggal}}", time.Now().Format("2006-01-02"))
+		emailMsgText = strings.ReplaceAll(emailMsgText, "{{id_member}}", sub.Member.MemberCode)
+
 		emailBody := fmt.Sprintf(`
 		<html>
 		<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f8fafc; padding: 40px 10px;">
 			<div style="max-width: 600px; margin: 0 auto; padding: 40px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
 				<h2 style="color: #2563eb; margin-top: 0; font-size: 24px; font-weight: bold; text-align: center;">Tagihan Iuran Langganan</h2>
-				<div style="font-size: 16px; margin-top: 20px; white-space: pre-wrap; background-color: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #f1f5f9;">%s</div>
+				<div style="font-size: 16px; margin-top: 20px; color: #333;">%s</div>
 				<hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
 				<p style="font-size: 12px; color: #94a3b8; text-align: center;">Pesan ini dikirim secara otomatis oleh <strong>%s</strong>.</p>
 			</div>
 		</body>
 		</html>
-		`, strings.ReplaceAll(msgText, "\n", "<br/>"), settings.Name)
+		`, strings.ReplaceAll(emailMsgText, "\n", "<br/>"), settings.Name)
 
 		go func(subj, body string) {
 			_ = utils.SendEmail(settings.SMTPHost, settings.SMTPPort, settings.SMTPEmail, settings.SMTPPassword, sub.Member.Email, subj, body)
@@ -271,7 +290,9 @@ func MarkAsPaid(c *fiber.Ctx) error {
 
 	if settings.SMTPHost != "" && settings.SMTPPassword != "" && settings.SMTPEmail != "" && mem.Email != "" {
 		var template models.MessageTemplate
-		database.DB.Where("type = ?", "lunas").First(&template)
+		if err := database.DB.Where("type = ? AND channel = ?", "lunas", "email").First(&template).Error; err != nil || template.ID == 0 {
+			database.DB.Where("type = ? AND channel = ?", "lunas", "wa").First(&template)
+		}
 
 		msgText := "Halo {{nama}}, terima kasih. Pembayaran Anda telah kami terima pada {{tanggal}}."
 		if template.ID != 0 {
@@ -362,7 +383,7 @@ func SendPaidReceipt(c *fiber.Ctx) error {
 	}
 
 	var template models.MessageTemplate
-	database.DB.Where("type = ?", "lunas").First(&template)
+	database.DB.Where("type = ? AND channel = ?", "lunas", "wa").First(&template)
 
 	msgText := "Halo {{nama}}, terima kasih. Pembayaran Anda telah kami terima pada {{tanggal}}."
 	if template.ID != 0 {
@@ -398,9 +419,14 @@ func SendPaidReceipt(c *fiber.Ctx) error {
 	var settings models.GymSetting
 	database.DB.First(&settings)
 	if settings.SMTPHost != "" && settings.SMTPPassword != "" && settings.SMTPEmail != "" && payment.Subscription.Member.Email != "" {
+		var emailTemplate models.MessageTemplate
+		if err := database.DB.Where("type = ? AND channel = ?", "lunas", "email").First(&emailTemplate).Error; err != nil || emailTemplate.ID == 0 {
+			emailTemplate = template
+		}
+
 		emailSubject := "Konfirmasi Kuitansi Pembayaran - " + settings.Name
-		if template.ID != 0 && template.Title != "" {
-			emailSubject = template.Title
+		if emailTemplate.ID != 0 && emailTemplate.Title != "" {
+			emailSubject = emailTemplate.Title
 			emailSubject = strings.ReplaceAll(emailSubject, "{{nama}}", payment.Subscription.Member.FullName)
 			emailSubject = strings.ReplaceAll(emailSubject, "{{nominal}}", formatRupiahBilling(payment.Amount))
 			emailSubject = strings.ReplaceAll(emailSubject, "{{tanggal}}", time.Now().Format("2006-01-02"))
@@ -410,18 +436,31 @@ func SendPaidReceipt(c *fiber.Ctx) error {
 			emailSubject = strings.ReplaceAll(emailSubject, "{{id_member}}", payment.Subscription.Member.MemberCode)
 		}
 
+		emailMsgText := "Halo {{nama}}, terima kasih. Pembayaran Anda telah kami terima pada {{tanggal}}."
+		if emailTemplate.ID != 0 && emailTemplate.Content != "" {
+			emailMsgText = emailTemplate.Content
+		}
+
+		emailMsgText = strings.ReplaceAll(emailMsgText, "{{nama}}", payment.Subscription.Member.FullName)
+		emailMsgText = strings.ReplaceAll(emailMsgText, "{{nominal}}", formatRupiahBilling(payment.Amount))
+		emailMsgText = strings.ReplaceAll(emailMsgText, "{{tanggal}}", time.Now().Format("2006-01-02"))
+		emailMsgText = strings.ReplaceAll(emailMsgText, "{{harga_paket}}", formatRupiahBilling(hargaPaket))
+		emailMsgText = strings.ReplaceAll(emailMsgText, "{{discount}}", discountStr)
+		emailMsgText = strings.ReplaceAll(emailMsgText, "{{tagihan}}", formatRupiahBilling(tagihan))
+		emailMsgText = strings.ReplaceAll(emailMsgText, "{{id_member}}", payment.Subscription.Member.MemberCode)
+
 		emailBody := fmt.Sprintf(`
 		<html>
 		<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f8fafc; padding: 40px 10px;">
 			<div style="max-width: 600px; margin: 0 auto; padding: 40px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
 				<h2 style="color: #10b981; margin-top: 0; font-size: 24px; font-weight: bold; text-align: center;">Konfirmasi Pembayaran Lunas</h2>
-				<div style="font-size: 16px; margin-top: 20px; white-space: pre-wrap; background-color: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #f1f5f9;">%s</div>
+				<div style="font-size: 16px; margin-top: 20px; color: #333;">%s</div>
 				<hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
 				<p style="font-size: 12px; color: #94a3b8; text-align: center;">Terima kasih atas keanggotaan Anda di <strong>%s</strong>!</p>
 			</div>
 		</body>
 		</html>
-		`, strings.ReplaceAll(msgText, "\n", "<br/>"), settings.Name)
+		`, strings.ReplaceAll(emailMsgText, "\n", "<br/>"), settings.Name)
 
 		// Async or quiet send to avoid blocking request
 		go func(subj, body string) {

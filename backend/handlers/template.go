@@ -41,6 +41,7 @@ func UpdateTemplate(c *fiber.Ctx) error {
 	t.Title = updateData.Title
 	t.Content = updateData.Content
 	t.Type = updateData.Type
+	t.Channel = updateData.Channel
 
 	database.DB.Save(&t)
 	LogActivity(c, "Update Template", "Updated message template: "+t.Title)

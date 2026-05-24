@@ -264,7 +264,9 @@ func ForgotPasswordCheck(c *fiber.Ctx) error {
 	resetLink := fmt.Sprintf("%s/reset-password?token=%s", siteAddr, t)
 
 	var template models.MessageTemplate
-	database.DB.Where("type = ?", "reset").First(&template)
+	if err := database.DB.Where("type = ? AND channel = ?", "reset", "email").First(&template).Error; err != nil || template.ID == 0 {
+		database.DB.Where("type = ? AND channel = ?", "reset", "wa").First(&template)
+	}
 
 	emailSubject := fmt.Sprintf("Reset Password Akun - %s", settings.Name)
 	if template.ID != 0 && template.Title != "" {
@@ -277,8 +279,17 @@ func ForgotPasswordCheck(c *fiber.Ctx) error {
 	var emailBody string
 	if template.ID != 0 && template.Content != "" {
 		msgText := template.Content
+		
+		// Wrap {{link_reset}} in a beautiful call-to-action button for email
+		buttonHTML := fmt.Sprintf(`
+		<div style="text-align: center; margin: 30px 0;">
+			<a href="%[1]s" style="background-color: #2563eb; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);">Reset Password Baru</a>
+		</div>
+		<p style="font-size: 14px; color: #64748b; text-align: center;">Jika tombol di atas tidak berfungsi, Anda juga dapat menyalin dan membuka link berikut di browser:<br/><span style="word-break: break-all; color: #2563eb;">%[1]s</span></p>
+		`, resetLink)
+		
+		msgText = strings.ReplaceAll(msgText, "{{link_reset}}", buttonHTML)
 		msgText = strings.ReplaceAll(msgText, "{{nama}}", member.FullName)
-		msgText = strings.ReplaceAll(msgText, "{{link_reset}}", resetLink)
 		msgText = strings.ReplaceAll(msgText, "{{nama_gym}}", settings.Name)
 		msgText = strings.ReplaceAll(msgText, "{{id_member}}", member.MemberCode)
 
@@ -286,7 +297,7 @@ func ForgotPasswordCheck(c *fiber.Ctx) error {
 		<html>
 		<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f8fafc; padding: 40px 10px;">
 			<div style="max-width: 600px; margin: 0 auto; padding: 40px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
-				<div style="font-size: 16px; color: #333; white-space: pre-wrap;">%s</div>
+				<div style="font-size: 16px; color: #333;">%s</div>
 			</div>
 		</body>
 		</html>

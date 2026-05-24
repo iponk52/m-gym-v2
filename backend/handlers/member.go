@@ -423,7 +423,7 @@ func ApproveMember(c *fiber.Ctx) error {
 	}
 
 	var template models.MessageTemplate
-	database.DB.Where("type = ?", "acc").First(&template)
+	database.DB.Where("type = ? AND channel = ?", "acc", "wa").First(&template)
 
 	msgText := "Pendaftaran Anda telah disetujui. Silakan login ke portal member menggunakan Password: {{password}}"
 	if template.ID != 0 {
@@ -451,26 +451,50 @@ func ApproveMember(c *fiber.Ctx) error {
 
 	// Send SMTP Approval Email if configured and member has email
 	if settings.SMTPHost != "" && settings.SMTPPassword != "" && settings.SMTPEmail != "" && member.Email != "" {
+		var emailTemplate models.MessageTemplate
+		if err := database.DB.Where("type = ? AND channel = ?", "acc", "email").First(&emailTemplate).Error; err != nil || emailTemplate.ID == 0 {
+			// Fallback to WA template
+			emailTemplate = template
+		}
+
 		emailSubject := "Pendaftaran Akun Disetujui - " + settings.Name
-		if template.ID != 0 && template.Title != "" {
-			emailSubject = template.Title
+		if emailTemplate.ID != 0 && emailTemplate.Title != "" {
+			emailSubject = emailTemplate.Title
 			emailSubject = strings.ReplaceAll(emailSubject, "{{nama}}", member.FullName)
 			emailSubject = strings.ReplaceAll(emailSubject, "{{nama_gym}}", settings.Name)
 			emailSubject = strings.ReplaceAll(emailSubject, "{{id_member}}", member.MemberCode)
 		}
+
+		emailMsgText := "Pendaftaran Anda telah disetujui. Silakan login ke portal member menggunakan Password: {{password}}"
+		if emailTemplate.ID != 0 && emailTemplate.Content != "" {
+			emailMsgText = emailTemplate.Content
+		}
+
+		// Wrap {{link_login}} in a beautiful call-to-action button for email
+		buttonHTML := fmt.Sprintf(`
+		<div style="text-align: center; margin: 30px 0;">
+			<a href="%[1]s" style="background-color: #2563eb; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);">Login ke Portal Member</a>
+		</div>
+		<p style="font-size: 14px; color: #64748b; text-align: center;">Jika tombol di atas tidak berfungsi, Anda juga dapat menyalin dan membuka link berikut di browser:<br/><span style="word-break: break-all; color: #2563eb;">%[1]s</span></p>
+		`, linkLogin)
+
+		emailMsgText = strings.ReplaceAll(emailMsgText, "{{link_login}}", buttonHTML)
+		emailMsgText = strings.ReplaceAll(emailMsgText, "{{nama}}", member.FullName)
+		emailMsgText = strings.ReplaceAll(emailMsgText, "{{password}}", passwordStr)
+		emailMsgText = strings.ReplaceAll(emailMsgText, "{{id_member}}", member.MemberCode)
 
 		emailBody := fmt.Sprintf(`
 		<html>
 		<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f8fafc; padding: 40px 10px;">
 			<div style="max-width: 600px; margin: 0 auto; padding: 40px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
 				<h2 style="color: #2563eb; margin-top: 0; font-size: 24px; font-weight: bold; text-align: center;">Akun Anda Telah Aktif!</h2>
-				<div style="font-size: 16px; margin-top: 20px; white-space: pre-wrap; background-color: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #f1f5f9;">%s</div>
+				<div style="font-size: 16px; margin-top: 20px; color: #333;">%s</div>
 				<hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
 				<p style="font-size: 12px; color: #94a3b8; text-align: center;">Selamat datang di <strong>%s</strong>.</p>
 			</div>
 		</body>
 		</html>
-		`, strings.ReplaceAll(msgText, "\n", "<br/>"), settings.Name)
+		`, strings.ReplaceAll(emailMsgText, "\n", "<br/>"), settings.Name)
 
 		// Async send so it doesn't block the HTTP request
 		go func(toEmail, subject, body string) {
@@ -494,7 +518,7 @@ func SendPasswordMessage(c *fiber.Ctx) error {
 	}
 
 	var template models.MessageTemplate
-	database.DB.Where("type = ?", "acc").First(&template)
+	database.DB.Where("type = ? AND channel = ?", "acc", "wa").First(&template)
 
 	msgText := "Pendaftaran Anda telah disetujui. Silakan login ke portal member menggunakan Password: {{password}}"
 	if template.ID != 0 {
@@ -522,26 +546,50 @@ func SendPasswordMessage(c *fiber.Ctx) error {
 
 	// Send SMTP Password Email if configured and member has email
 	if settings.SMTPHost != "" && settings.SMTPPassword != "" && settings.SMTPEmail != "" && member.Email != "" {
+		var emailTemplate models.MessageTemplate
+		if err := database.DB.Where("type = ? AND channel = ?", "acc", "email").First(&emailTemplate).Error; err != nil || emailTemplate.ID == 0 {
+			// Fallback to WA template
+			emailTemplate = template
+		}
+
 		emailSubject := "Informasi Akun Member - " + settings.Name
-		if template.ID != 0 && template.Title != "" {
-			emailSubject = template.Title
+		if emailTemplate.ID != 0 && emailTemplate.Title != "" {
+			emailSubject = emailTemplate.Title
 			emailSubject = strings.ReplaceAll(emailSubject, "{{nama}}", member.FullName)
 			emailSubject = strings.ReplaceAll(emailSubject, "{{nama_gym}}", settings.Name)
 			emailSubject = strings.ReplaceAll(emailSubject, "{{id_member}}", member.MemberCode)
 		}
+
+		emailMsgText := "Pendaftaran Anda telah disetujui. Silakan login ke portal member menggunakan Password: {{password}}"
+		if emailTemplate.ID != 0 && emailTemplate.Content != "" {
+			emailMsgText = emailTemplate.Content
+		}
+
+		// Wrap {{link_login}} in a beautiful call-to-action button for email
+		buttonHTML := fmt.Sprintf(`
+		<div style="text-align: center; margin: 30px 0;">
+			<a href="%[1]s" style="background-color: #2563eb; color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-block; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);">Login ke Portal Member</a>
+		</div>
+		<p style="font-size: 14px; color: #64748b; text-align: center;">Jika tombol di atas tidak berfungsi, Anda juga dapat menyalin dan membuka link berikut di browser:<br/><span style="word-break: break-all; color: #2563eb;">%[1]s</span></p>
+		`, linkLogin)
+
+		emailMsgText = strings.ReplaceAll(emailMsgText, "{{link_login}}", buttonHTML)
+		emailMsgText = strings.ReplaceAll(emailMsgText, "{{nama}}", member.FullName)
+		emailMsgText = strings.ReplaceAll(emailMsgText, "{{password}}", passwordStr)
+		emailMsgText = strings.ReplaceAll(emailMsgText, "{{id_member}}", member.MemberCode)
 
 		emailBody := fmt.Sprintf(`
 		<html>
 		<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f8fafc; padding: 40px 10px;">
 			<div style="max-width: 600px; margin: 0 auto; padding: 40px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
 				<h2 style="color: #2563eb; margin-top: 0; font-size: 24px; font-weight: bold; text-align: center;">Informasi Akses Akun</h2>
-				<div style="font-size: 16px; margin-top: 20px; white-space: pre-wrap; background-color: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #f1f5f9;">%s</div>
+				<div style="font-size: 16px; margin-top: 20px; color: #333;">%s</div>
 				<hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
 				<p style="font-size: 12px; color: #94a3b8; text-align: center;">Pesan ini dikirim secara otomatis oleh <strong>%s</strong>.</p>
 			</div>
 		</body>
 		</html>
-		`, strings.ReplaceAll(msgText, "\n", "<br/>"), settings.Name)
+		`, strings.ReplaceAll(emailMsgText, "\n", "<br/>"), settings.Name)
 
 		// Async send so it doesn't block the HTTP request
 		go func(toEmail, subject, body string) {
