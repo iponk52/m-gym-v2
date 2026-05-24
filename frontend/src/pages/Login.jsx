@@ -97,7 +97,7 @@ export default function Login() {
   };
 
   const handleForgotPasswordSubmit = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     setForgotError('');
     setForgotLoading(true);
 
@@ -253,17 +253,25 @@ export default function Login() {
           <div className="bg-white rounded-3xl w-full max-w-md p-8 shadow-2xl">
             {forgotSuccess ? (
               <div className="text-center space-y-5">
-                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
+                <div className="w-16 h-16 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto shadow-sm">
                   <Activity size={32} />
                 </div>
-                <h2 className="text-2xl font-bold text-slate-800">Email Terkirim!</h2>
+                <h2 className="text-2xl font-bold text-slate-800">Email Reset Terkirim</h2>
                 <div className="text-sm text-slate-600 space-y-3 leading-relaxed text-left bg-slate-50 p-5 rounded-2xl border border-slate-100">
-                  <p>Kami telah mengirimkan link reset password ke email terdaftar Anda: <strong className="text-slate-800">{forgotSuccess.email}</strong>.</p>
-                  <p>⚠️ <strong>PENTING:</strong> Silakan cek folder <strong>Spam</strong> atau <strong>Promosi</strong> jika email tidak ditemukan di kotak masuk utama.</p>
-                  <p>Jika masih belum menerima email reset password, silakan hubungi admin via WhatsApp untuk mendapatkan bantuan.</p>
+                  <p>Silakan cek email untuk reset password. Jika tidak menerima email, silakan kirim email lagi, atau hubungi admin.</p>
+                  <p className="text-xs text-slate-400 mt-2 font-medium">⚠️ <strong>TIPS:</strong> Cek folder <strong>Spam</strong> atau <strong>Promosi</strong> jika tidak ada di kotak masuk utama.</p>
                 </div>
                 
                 <div className="flex flex-col gap-2 pt-2">
+                  <button 
+                    type="button" 
+                    onClick={() => handleForgotPasswordSubmit(null)}
+                    disabled={forgotLoading}
+                    className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all disabled:opacity-50"
+                  >
+                    {forgotLoading ? 'Mengirim Ulang...' : 'Coba Lagi (Kirim Email Lagi)'}
+                  </button>
+
                   <button 
                     type="button" 
                     onClick={() => {
@@ -274,8 +282,9 @@ export default function Login() {
                     }}
                     className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-lg shadow-emerald-500/20 transition-all"
                   >
-                    Chat Admin via WhatsApp
+                    Hubungi Admin (WhatsApp)
                   </button>
+
                   <button 
                     type="button" 
                     onClick={() => {
@@ -301,7 +310,7 @@ export default function Login() {
                     {forgotError}
                   </div>
                 )}
-
+ 
                 <form onSubmit={handleForgotPasswordSubmit} className="space-y-4">
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-2">Nama Lengkap</label>
@@ -310,7 +319,7 @@ export default function Login() {
                       <input required type="text" value={forgotName} onChange={e => setForgotName(e.target.value)} className="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-50" placeholder="Sesuai yang terdaftar" />
                     </div>
                   </div>
-
+ 
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-2">Nomor Telepon</label>
                     <div className="relative">
@@ -325,11 +334,11 @@ export default function Login() {
                       }} className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 bg-slate-50" placeholder="e.g. 628123456789" />
                     </div>
                   </div>
-
+ 
                   <div className="flex gap-3 mt-6">
                     <button type="button" onClick={() => { setShowForgotPassword(false); setForgotError(''); setForgotName(''); setForgotPhone(''); }} className="w-1/3 py-3 text-slate-600 hover:bg-slate-100 rounded-xl font-bold transition-colors">Batal</button>
-                    <button type="submit" disabled={forgotLoading} className="w-2/3 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-emerald-500/30 disabled:opacity-50">
-                      {forgotLoading ? 'Mengecek...' : 'Kirim Link ke Email'}
+                    <button type="submit" disabled={forgotLoading} className="w-2/3 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-500/30 disabled:opacity-50">
+                      {forgotLoading ? 'Mengecek...' : 'Reset Password'}
                     </button>
                   </div>
                 </form>
