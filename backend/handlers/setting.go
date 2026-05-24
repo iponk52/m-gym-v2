@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"mgym-backend/database"
 	"mgym-backend/models"
+	"mgym-backend/utils"
 	"os"
+	"time"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -93,4 +95,47 @@ func UploadGymLogo(c *fiber.Ctx) error {
 	LogActivity(c, "Upload Logo", "Uploaded new gym logo")
 
 	return c.JSON(fiber.Map{"message": "Logo uploaded successfully", "logo_url": logoURL})
+}
+
+type TestSMTPRequest struct {
+	SMTPHost     string `json:"smtp_host"`
+	SMTPPort     int    `json:"smtp_port"`
+	SMTPEmail    string `json:"smtp_email"`
+	SMTPPassword string `json:"smtp_password"`
+	TestEmail    string `json:"test_email"`
+}
+
+func TestSMTPSettings(c *fiber.Ctx) error {
+	var req TestSMTPRequest
+	if err := c.BodyParser(&req); err != nil {
+		return c.Status(400).JSON(fiber.Map{"error": "Invalid input"})
+	}
+
+	if req.SMTPHost == "" || req.SMTPEmail == "" || req.SMTPPassword == "" || req.TestEmail == "" {
+		return c.Status(400).JSON(fiber.Map{"error": "Semua field SMTP dan Email Penerima wajib diisi."})
+	}
+
+	subject := "Test Koneksi SMTP - M-GYM"
+	body := fmt.Sprintf(`
+	<html>
+	<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f8fafc; padding: 40px 10px;">
+		<div style="max-width: 600px; margin: 0 auto; padding: 40px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+			<h2 style="color: #2563eb; margin-top: 0; font-size: 24px; font-weight: bold; text-align: center;">Koneksi SMTP Berhasil!</h2>
+			<p style="font-size: 16px; margin-top: 20px;">Selamat!</p>
+			<p style="font-size: 16px;">Konfigurasi SMTP email Anda di sistem <strong>M-GYM</strong> telah berhasil terhubung dan dapat mengirimkan email dengan sukses.</p>
+			<hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;" />
+			<p style="font-size: 12px; color: #94a3b8; text-align: center;">Email uji coba dikirim pada: %s</p>
+		</div>
+	</body>
+	</html>
+	`, time.Now().Format("2006-01-02 15:04:05"))
+
+	err := utils.SendEmail(req.SMTPHost, req.SMTPPort, req.SMTPEmail, req.SMTPPassword, req.TestEmail, subject, body)
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": fmt.Sprintf("Koneksi SMTP gagal: %v", err)})
+	}
+
+	LogActivity(c, "Test SMTP", "Successfully tested SMTP configuration to: "+req.TestEmail)
+
+	return c.JSON(fiber.Map{"message": "Koneksi SMTP berhasil! Email uji coba telah terkirim."})
 }

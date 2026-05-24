@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Save, Upload, Info, Image as ImageIcon, CreditCard, Plus, Edit, Trash2, Wallet, Smartphone, Landmark, QrCode, Users } from 'lucide-react';
+import { Save, Upload, Info, Image as ImageIcon, CreditCard, Plus, Edit, Trash2, Wallet, Smartphone, Landmark, QrCode, Users, Mail } from 'lucide-react';
 import axios from 'axios';
 
 export default function Settings() {
@@ -28,6 +28,8 @@ export default function Settings() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
   const fileInputRef = useRef(null);
+  const [testEmail, setTestEmail] = useState('');
+  const [testingSmtp, setTestingSmtp] = useState(false);
 
   const [activeTab, setActiveTab] = useState('general'); // 'general', 'payment', 'admins'
   const [admins, setAdmins] = useState([]);
@@ -102,6 +104,26 @@ export default function Settings() {
       setTimeout(() => setMessage({ text: '', type: '' }), 3000);
     } catch (error) {
       setMessage({ text: 'Failed to upload logo', type: 'error' });
+    }
+  };
+
+  const handleTestSMTP = async () => {
+    if (!testEmail) return;
+    setTestingSmtp(true);
+    setMessage({ text: '', type: '' });
+    try {
+      const res = await axios.post(`${window.location.protocol}//${window.location.hostname}/api/settings/test-smtp`, {
+        smtp_host: settings.smtp_host,
+        smtp_port: settings.smtp_port,
+        smtp_email: settings.smtp_email,
+        smtp_password: settings.smtp_password,
+        test_email: testEmail
+      });
+      setMessage({ text: res.data.message, type: 'success' });
+    } catch (err) {
+      setMessage({ text: err.response?.data?.error || 'Koneksi SMTP gagal.', type: 'error' });
+    } finally {
+      setTestingSmtp(false);
     }
   };
 
@@ -221,6 +243,12 @@ export default function Settings() {
         >
           Admin Accounts
         </button>
+        <button 
+          onClick={() => setActiveTab('smtp')} 
+          className={`py-3 px-6 font-bold text-sm whitespace-nowrap border-b-2 transition-colors ${activeTab === 'smtp' ? 'border-blue-600 text-blue-600' : 'border-transparent text-slate-500 hover:text-slate-700'}`}
+        >
+          Email (SMTP)
+        </button>
       </div>
 
       {activeTab === 'general' && (
@@ -326,54 +354,6 @@ export default function Settings() {
                 </div>
 
                 <div className="md:col-span-2 pt-4 border-t border-slate-100">
-                  <h3 className="text-md font-bold text-slate-800 mb-4">SMTP Email Configuration</h3>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">SMTP Host</label>
-                  <input 
-                    type="text" 
-                    value={settings.smtp_host || ''} 
-                    onChange={e => setSettings({...settings, smtp_host: e.target.value})}
-                    placeholder="e.g. smtp.gmail.com"
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500" 
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">SMTP Port</label>
-                  <input 
-                    type="number" 
-                    value={settings.smtp_port || ''} 
-                    onChange={e => setSettings({...settings, smtp_port: parseInt(e.target.value) || 0})}
-                    placeholder="e.g. 587 or 465"
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500" 
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">SMTP Email User</label>
-                  <input 
-                    type="email" 
-                    value={settings.smtp_email || ''} 
-                    onChange={e => setSettings({...settings, smtp_email: e.target.value})}
-                    placeholder="your-email@gmail.com"
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500" 
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">SMTP Password / App Password</label>
-                  <input 
-                    type="password" 
-                    value={settings.smtp_password || ''} 
-                    onChange={e => setSettings({...settings, smtp_password: e.target.value})}
-                    placeholder="••••••••••••"
-                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500" 
-                  />
-                </div>
-
-                <div className="md:col-span-2 pt-4 border-t border-slate-100">
                   <h3 className="text-md font-bold text-slate-800 mb-4">Homepage Settings (Public)</h3>
                 </div>
 
@@ -412,6 +392,96 @@ export default function Settings() {
           </div>
         </div>
       </div>
+      )}
+
+      {/* SMTP Email settings Tab */}
+      {activeTab === 'smtp' && (
+        <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 mb-8">
+          <h2 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
+            <Mail size={20} className="text-blue-500" /> SMTP Email Configuration
+          </h2>
+
+          <form onSubmit={handleUpdateText} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">SMTP Host</label>
+                <input 
+                  type="text" 
+                  value={settings.smtp_host || ''} 
+                  onChange={e => setSettings({...settings, smtp_host: e.target.value})}
+                  placeholder="e.g. smtp.gmail.com"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500" 
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">SMTP Port</label>
+                <input 
+                  type="number" 
+                  value={settings.smtp_port || ''} 
+                  onChange={e => setSettings({...settings, smtp_port: parseInt(e.target.value) || 0})}
+                  placeholder="e.g. 587 or 465"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500" 
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">SMTP Email User</label>
+                <input 
+                  type="email" 
+                  value={settings.smtp_email || ''} 
+                  onChange={e => setSettings({...settings, smtp_email: e.target.value})}
+                  placeholder="your-email@gmail.com"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500" 
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">SMTP Password / App Password</label>
+                <input 
+                  type="password" 
+                  value={settings.smtp_password || ''} 
+                  onChange={e => setSettings({...settings, smtp_password: e.target.value})}
+                  placeholder="••••••••••••"
+                  className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500" 
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+              {/* SMTP Test Connection Panel */}
+              <div className="flex items-center gap-2 flex-1 max-w-md">
+                <input 
+                  type="email" 
+                  value={testEmail} 
+                  onChange={e => setTestEmail(e.target.value)} 
+                  placeholder="Email penerima untuk test" 
+                  className="flex-1 px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 bg-slate-50" 
+                />
+                <button 
+                  type="button" 
+                  disabled={testingSmtp || !testEmail} 
+                  onClick={handleTestSMTP} 
+                  className="bg-slate-800 hover:bg-slate-900 text-white px-4 py-2.5 text-sm font-bold rounded-xl transition-all disabled:opacity-50 whitespace-nowrap"
+                >
+                  {testingSmtp ? 'Mencoba...' : 'Test Koneksi'}
+                </button>
+              </div>
+
+              <button 
+                type="submit" 
+                disabled={saving}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold transition-colors shadow-lg shadow-blue-500/30 flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                <Save size={18} /> {saving ? 'Saving...' : 'Save Configuration'}
+              </button>
+            </div>
+          </form>
+        </div>
       )}
       {/* Payment Methods Section */}
       {activeTab === 'payment' && (

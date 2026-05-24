@@ -108,6 +108,7 @@ func SetupRoutes(app *fiber.App) {
 
 	admin.Put("/settings", handlers.UpdateSettings)
 	admin.Post("/settings/logo", handlers.UploadGymLogo)
+	admin.Post("/settings/test-smtp", handlers.TestSMTPSettings)
 
 	admin.Get("/admins", handlers.GetAdmins)
 	admin.Post("/admins", handlers.CreateAdmin)
