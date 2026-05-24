@@ -79,6 +79,12 @@ export default function Login() {
     try {
       await axios.put(`${window.location.protocol}//${window.location.hostname}/api/auth/change-password/${tempAuthData.member_id}`, {
         new_password: newPassword
+      }, {
+        headers: {
+          Authorization: `Bearer ${tempAuthData.token}`,
+          'X-User-Role': tempAuthData.role || 'member',
+          'X-Username': tempAuthData.name || 'member'
+        }
       });
       
       // Jika sukses, proceed login
