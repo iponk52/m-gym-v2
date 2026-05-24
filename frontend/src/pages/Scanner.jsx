@@ -15,7 +15,7 @@ export default function Scanner() {
 
   const fetchLinks = async () => {
     try {
-      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/scanner-links`);
+      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}/api/scanner-links`);
       setScannerLinks(res.data);
     } catch (error) {
       console.error(error);
@@ -30,7 +30,7 @@ export default function Scanner() {
     e.preventDefault();
     if (!newLinkName) return;
     try {
-      await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/scanner-links`, { name: newLinkName });
+      await axios.post(`${window.location.protocol}//${window.location.hostname}/api/scanner-links`, { name: newLinkName });
       setNewLinkName('');
       fetchLinks();
     } catch (error) {
@@ -41,7 +41,7 @@ export default function Scanner() {
   const handleDeleteLink = async (id) => {
     if (!confirm('Are you sure you want to delete this link?')) return;
     try {
-      await axios.delete(`${window.location.protocol}//${window.location.hostname}:3000/api/scanner-links/${id}`);
+      await axios.delete(`${window.location.protocol}//${window.location.hostname}/api/scanner-links/${id}`);
       fetchLinks();
     } catch (error) {
       alert('Failed to delete link');
@@ -49,7 +49,7 @@ export default function Scanner() {
   };
 
   const copyToClipboard = (secret) => {
-    const url = `${window.location.protocol}//${window.location.hostname}:3000/s/${secret}`;
+    const url = `${window.location.origin}/s/${secret}`;
     navigator.clipboard.writeText(url);
     alert('Link copied to clipboard!');
   };
@@ -67,7 +67,7 @@ export default function Scanner() {
     setStatus('');
 
     try {
-      const response = await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/attendance/scan`, {
+      const response = await axios.post(`${window.location.protocol}//${window.location.hostname}/api/attendance/scan`, {
         qr_code: qrText
       });
       setStatus('success');

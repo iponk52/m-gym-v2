@@ -4,14 +4,8 @@ import tailwindcss from '@tailwindcss/vite'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  server: {
-    proxy: {
-      // Setiap request ke /api akan dilempar ke localhost:3000
-      "/api": {
-        target: "http://localhost:3000",
-        changeOrigin: true,
-      },
-    },
-  },
-});
+  plugins: [
+    react(),
+    tailwindcss(),
+  ],
+})
