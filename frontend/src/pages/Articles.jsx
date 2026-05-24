@@ -17,7 +17,7 @@ export default function Articles() {
 
   const fetchArticles = async () => {
     try {
-      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}/api/articles`);
+      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/articles`);
       setArticles(res.data);
     } catch (error) {
       console.error('Failed to fetch articles');
@@ -40,7 +40,7 @@ export default function Articles() {
   const handleDelete = async (id) => {
     if (confirm('Are you sure you want to delete this article?')) {
       try {
-        await axios.delete(`${window.location.protocol}//${window.location.hostname}/api/articles/${id}`);
+        await axios.delete(`${window.location.protocol}//${window.location.hostname}:3000/api/articles/${id}`);
         fetchArticles();
       } catch (error) {
         alert('Failed to delete article');
@@ -52,9 +52,9 @@ export default function Articles() {
     e.preventDefault();
     try {
       if (editingId) {
-        await axios.put(`${window.location.protocol}//${window.location.hostname}/api/articles/${editingId}`, formData);
+        await axios.put(`${window.location.protocol}//${window.location.hostname}:3000/api/articles/${editingId}`, formData);
       } else {
-        await axios.post(`${window.location.protocol}//${window.location.hostname}/api/articles`, formData);
+        await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/articles`, formData);
       }
       setShowModal(false);
       setFormData({ title: '', content: '', author: '', cover_url: '' });
@@ -73,7 +73,7 @@ export default function Articles() {
     fd.append('image', file);
 
     try {
-      const res = await axios.post(`${window.location.protocol}//${window.location.hostname}/api/articles/upload-image`, fd, {
+      const res = await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/articles/upload-image`, fd, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setFormData({ ...formData, cover_url: res.data.url });
@@ -137,7 +137,17 @@ export default function Articles() {
             <div className="p-6 flex flex-col flex-1">
               <h3 className="font-bold text-lg text-slate-800 mb-2 line-clamp-2">{article.title}</h3>
               <p className="text-sm text-slate-500 mb-4 flex-1 line-clamp-3">
-                {article.content.replace(/<[^>]+>/g, '')}
+                {article.content
+                  .replace(/&nbsp;/gi, ' ')
+                  .replace(/&amp;/gi, '&')
+                  .replace(/&lt;/gi, '<')
+                  .replace(/&gt;/gi, '>')
+                  .replace(/&quot;/gi, '"')
+                  .replace(/&#39;/gi, "'")
+                  .replace(/<[^>]+>/g, '')
+                  .replace(/\u00A0/g, ' ')
+                  .replace(/\s+/g, ' ')
+                  .trim()}
               </p>
               <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
                 <span className="text-xs font-medium text-slate-400">{new Date(article.CreatedAt).toLocaleDateString()}</span>

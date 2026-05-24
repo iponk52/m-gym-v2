@@ -15,7 +15,7 @@ export default function Discounts() {
 
   const fetchDiscounts = async () => {
     try {
-      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}/api/discounts`);
+      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/discounts`);
       setDiscounts(res.data);
     } catch (error) {
       console.error(error);
@@ -29,9 +29,9 @@ export default function Discounts() {
     try {
       const payload = { ...formData, value: parseFloat(formData.value) };
       if (editingId) {
-        await axios.put(`${window.location.protocol}//${window.location.hostname}/api/discounts/${editingId}`, payload);
+        await axios.put(`${window.location.protocol}//${window.location.hostname}:3000/api/discounts/${editingId}`, payload);
       } else {
-        await axios.post(`${window.location.protocol}//${window.location.hostname}/api/discounts`, payload);
+        await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/discounts`, payload);
       }
       setShowModal(false);
       setFormData({ name: '', description: '', type: 'nominal', value: 0 });
@@ -51,7 +51,7 @@ export default function Discounts() {
   const handleDelete = async (id) => {
     if (confirm('Are you sure you want to delete this discount?')) {
       try {
-        await axios.delete(`${window.location.protocol}//${window.location.hostname}/api/discounts/${id}`);
+        await axios.delete(`${window.location.protocol}//${window.location.hostname}:3000/api/discounts/${id}`);
         fetchDiscounts();
       } catch (error) {
         alert('Failed to delete discount');

@@ -30,7 +30,7 @@ export default function MemberProfile() {
 
   const fetchBayarTemplate = async () => {
     try {
-      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}/api/templates`);
+      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/templates`);
       const t = res.data.find(x => x.type === 'bayar');
       if (t) {
         setBayarTemplate(t.content);
@@ -45,7 +45,7 @@ export default function MemberProfile() {
         navigate('/login');
         return;
       }
-      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}/api/members/${id}`);
+      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/members/${id}`);
       setMember(res.data);
       setFormData({
         phone: res.data.phone || '',
@@ -64,7 +64,7 @@ export default function MemberProfile() {
 
   const fetchPaymentMethods = async () => {
     try {
-      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}/api/payment-methods`);
+      const res = await axios.get(`${window.location.protocol}//${window.location.hostname}:3000/api/payment-methods`);
       setPaymentMethods(res.data);
     } catch (err) {
       console.error("Failed to fetch payment methods", err);
@@ -83,7 +83,7 @@ export default function MemberProfile() {
     setMessage('');
     try {
       const id = localStorage.getItem('member_id');
-      await axios.put(`${window.location.protocol}//${window.location.hostname}/api/members/${id}`, formData);
+      await axios.put(`${window.location.protocol}//${window.location.hostname}:3000/api/members/${id}`, formData);
       setMessage('Profile updated successfully!');
       fetchMember();
       setTimeout(() => setMessage(''), 3000);
@@ -103,7 +103,7 @@ export default function MemberProfile() {
 
     try {
       const id = localStorage.getItem('member_id');
-      await axios.post(`${window.location.protocol}//${window.location.hostname}/api/members/${id}/photo`, formDataUpload, {
+      await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/members/${id}/photo`, formDataUpload, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       fetchMember();
@@ -129,7 +129,7 @@ export default function MemberProfile() {
 
   const handleLogout = async () => {
     try {
-      await axios.post(`${window.location.protocol}//${window.location.hostname}/api/auth/logout`);
+      await axios.post(`${window.location.protocol}//${window.location.hostname}:3000/api/auth/logout`);
     } catch(e) {}
     localStorage.clear();
     navigate('/login');
