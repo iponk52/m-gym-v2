@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User, Lock, Activity } from 'lucide-react';
 import axios from 'axios';
@@ -22,6 +22,15 @@ export default function Login() {
   const [forgotLoading, setForgotLoading] = useState(false);
   const [forgotError, setForgotError] = useState('');
   const [forgotSuccess, setForgotSuccess] = useState(null);
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => {
+      setCooldown(prev => prev - 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
 
   const navigate = useNavigate();
   const { gymSettings } = useSettings();
@@ -98,6 +107,7 @@ export default function Login() {
 
   const handleForgotPasswordSubmit = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
+    if (cooldown > 0) return;
     setForgotError('');
     setForgotLoading(true);
 
@@ -108,8 +118,13 @@ export default function Login() {
       });
       
       setForgotSuccess(res.data);
+      setCooldown(30); // 30 seconds default local cooldown on success
     } catch (err) {
-      setForgotError(err.response?.data?.error || 'Gagal menghubungi server');
+      const errorMsg = err.response?.data?.error || 'Gagal menghubungi server';
+      setForgotError(errorMsg);
+      if (err.response?.data?.cooldown_remaining) {
+        setCooldown(err.response.data.cooldown_remaining);
+      }
     } finally {
       setForgotLoading(false);
     }
@@ -266,10 +281,10 @@ export default function Login() {
                   <button 
                     type="button" 
                     onClick={() => handleForgotPasswordSubmit(null)}
-                    disabled={forgotLoading}
+                    disabled={forgotLoading || cooldown > 0}
                     className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/20 transition-all disabled:opacity-50"
                   >
-                    {forgotLoading ? 'Mengirim Ulang...' : 'Coba Lagi (Kirim Email Lagi)'}
+                    {forgotLoading ? 'Mengirim Ulang...' : cooldown > 0 ? `Coba Lagi (Tunggu ${cooldown}s)` : 'Coba Lagi (Kirim Email Lagi)'}
                   </button>
 
                   <button 
@@ -337,8 +352,8 @@ export default function Login() {
  
                   <div className="flex gap-3 mt-6">
                     <button type="button" onClick={() => { setShowForgotPassword(false); setForgotError(''); setForgotName(''); setForgotPhone(''); }} className="w-1/3 py-3 text-slate-600 hover:bg-slate-100 rounded-xl font-bold transition-colors">Batal</button>
-                    <button type="submit" disabled={forgotLoading} className="w-2/3 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-500/30 disabled:opacity-50">
-                      {forgotLoading ? 'Mengecek...' : 'Reset Password'}
+                    <button type="submit" disabled={forgotLoading || cooldown > 0} className="w-2/3 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold transition-all shadow-lg shadow-blue-500/30 disabled:opacity-50">
+                      {forgotLoading ? 'Mengecek...' : cooldown > 0 ? `Tunggu ${cooldown}s` : 'Reset Password'}
                     </button>
                   </div>
                 </form>

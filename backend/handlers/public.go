@@ -6,6 +6,7 @@ import (
 	"mgym-backend/models"
 	"mgym-backend/utils"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -165,6 +166,16 @@ func censorEmail(email string) string {
 	return string(username[0]) + "***" + string(username[len(username)-1]) + "@" + domain
 }
 
+type ResetCooldownState struct {
+	LastSent time.Time
+	Attempts int
+}
+
+var (
+	resetCooldownMap = make(map[uint]*ResetCooldownState)
+	resetCooldownMu  sync.Mutex
+)
+
 func ForgotPasswordCheck(c *fiber.Ctx) error {
 	var req ForgotPasswordCheckReq
 	if err := c.BodyParser(&req); err != nil {
@@ -180,6 +191,48 @@ func ForgotPasswordCheck(c *fiber.Ctx) error {
 	if err := database.DB.Where("phone = ? AND full_name ILIKE ?", req.Phone, "%"+req.FullName+"%").First(&member).Error; err != nil {
 		return c.Status(404).JSON(fiber.Map{"error": "Member tidak ditemukan. Pastikan nama dan no telp sesuai dengan yang terdaftar."})
 	}
+
+	// Progressive rate-limiting cooldown per account (Spam protection)
+	resetCooldownMu.Lock()
+	state, exists := resetCooldownMap[member.ID]
+	if !exists {
+		state = &ResetCooldownState{}
+		resetCooldownMap[member.ID] = state
+	}
+
+	now := time.Now()
+	// Reset attempt counter if the last request was more than 30 minutes ago
+	if now.Sub(state.LastSent) > 30*time.Minute {
+		state.Attempts = 0
+	}
+
+	if state.Attempts > 0 {
+		var cooldownDuration time.Duration
+		switch state.Attempts {
+		case 1:
+			cooldownDuration = 30 * time.Second
+		case 2:
+			cooldownDuration = 60 * time.Second
+		case 3:
+			cooldownDuration = 180 * time.Second
+		default:
+			cooldownDuration = 600 * time.Second
+		}
+
+		elapsed := now.Sub(state.LastSent)
+		if elapsed < cooldownDuration {
+			remaining := cooldownDuration - elapsed
+			resetCooldownMu.Unlock()
+			return c.Status(429).JSON(fiber.Map{
+				"error":              fmt.Sprintf("Mohon tunggu %d detik sebelum meminta reset password kembali (Indikasi Spam).", int(remaining.Seconds())),
+				"cooldown_remaining": int(remaining.Seconds()),
+			})
+		}
+	}
+
+	state.Attempts++
+	state.LastSent = now
+	resetCooldownMu.Unlock()
 
 	if member.Email == "" {
 		return c.Status(400).JSON(fiber.Map{"error": "Email Anda belum terdaftar di sistem. Silakan hubungi admin via WhatsApp untuk mendaftarkannya."})
