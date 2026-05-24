@@ -107,9 +107,13 @@ export default function ArticleDetail() {
             {/* Rich Text Content Rendering */}
             <div className="ql-snow">
               <div 
-                className="ql-editor prose prose-slate dark:prose-invert prose-lg max-w-none prose-headings:font-bold prose-a:text-blue-600 hover:prose-a:text-blue-500 prose-img:rounded-2xl prose-img:shadow-md"
-                dangerouslySetInnerHTML={{ __html: article.content }}
-                style={{ padding: 0 }}
+                className="ql-editor prose prose-slate dark:prose-invert prose-lg max-w-none prose-headings:font-bold prose-a:text-blue-600 hover:prose-a:text-blue-500 prose-img:rounded-2xl prose-img:shadow-md break-words"
+                dangerouslySetInnerHTML={{ 
+                  __html: article.content
+                    .replace(/&nbsp;/g, ' ')
+                    .replace(/\u00a0/g, ' ')
+                }}
+                style={{ padding: 0, wordBreak: 'normal', overflowWrap: 'break-word' }}
               />
             </div>
           </div>
